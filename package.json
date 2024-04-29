@@ -1,0 +1,39 @@
+{
+  "name": "bare-crypto",
+  "version": "1.0.0",
+  "description": "Cryptographic primitives for JavaScript",
+  "exports": {
+    ".": "./index.js",
+    "./package": "./package.json",
+    "./constants": "./lib/constants.js",
+    "./errors": "./lib/errors.js"
+  },
+  "files": [
+    "index.js",
+    "binding.c",
+    "binding.js",
+    "CMakeLists.txt",
+    "lib",
+    "prebuilds"
+  ],
+  "scripts": {
+    "test": "standard"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/holepunchto/bare-crypto.git"
+  },
+  "author": "Holepunch",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/holepunchto/bare-crypto/issues"
+  },
+  "homepage": "https://github.com/holepunchto/bare-crypto#readme",
+  "dependencies": {
+    "bare-stream": "^1.0.0"
+  },
+  "devDependencies": {
+    "brittle": "^3.5.0",
+    "standard": "^17.0.0"
+  }
+}

@@ -1,0 +1,4 @@
+[submodule "vendor/boringssl"]
+	path = vendor/boringssl
+	url = ../../google/boringssl.git
+	shallow = true
