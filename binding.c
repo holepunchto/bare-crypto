@@ -3,10 +3,6 @@
 #include <js.h>
 #include <openssl/digest.h>
 #include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
-#include <utf.h>
-#include <utf/string.h>
 
 enum {
   bare_crypto_md5 = 1,
