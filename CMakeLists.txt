@@ -11,6 +11,10 @@ if(NOT TARGET ssl)
     set(OPENSSL_NO_ASM ON)
   endif()
 
+  if(WIN32)
+    add_definitions(-DWIN32_LEAN_AND_MEAN)
+  endif()
+
   add_subdirectory(vendor/boringssl EXCLUDE_FROM_ALL)
 endif()
 

@@ -1,7 +1,3 @@
-#ifdef WIN32
-#define WIN32_LEAN_AND_MEAN // Avoid symbol clashes on Windows
-#endif
-
 #include <assert.h>
 #include <bare.h>
 #include <js.h>
