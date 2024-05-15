@@ -51,6 +51,10 @@ exports.createHash = function createHash (algorithm, opts) {
   return new Hash(algorithm, opts)
 }
 
+exports.randomBytes = function randomBytes (size) {
+  return Buffer.from(binding.randomBytes(size))
+}
+
 function mapWritable (data) {
   return typeof data === 'string' ? Buffer.from(data) : data
 }
