@@ -141,6 +141,7 @@ bare_crypto_random_bytes (js_env_t *env, js_callback_info_t *info) {
 
   uint8_t *buf;
   err = js_create_arraybuffer(env, len, (void **) &buf, &result);
+  assert(err == 0);
 
   err = RAND_bytes(buf, len);
   assert(err == 1);
