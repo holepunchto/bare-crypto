@@ -2,6 +2,7 @@
 #include <bare.h>
 #include <js.h>
 #include <openssl/digest.h>
+#include <openssl/rand.h>
 #include <stddef.h>
 
 enum {
@@ -121,6 +122,34 @@ bare_crypto_hash_final (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
+bare_crypto_random_bytes (js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  uint32_t len;
+  err = js_get_value_uint32(env, argv[0], &len);
+  assert(err == 0);
+
+  js_value_t *result;
+
+  uint8_t *buf;
+  err = js_create_arraybuffer(env, len, (void **) &buf, &result);
+  assert(err == 0);
+
+  err = RAND_bytes(buf, len);
+  assert(err == 1);
+
+  return result;
+}
+
+static js_value_t *
 bare_crypto_exports (js_env_t *env, js_value_t *exports) {
   int err;
 
@@ -136,6 +165,7 @@ bare_crypto_exports (js_env_t *env, js_value_t *exports) {
   V("hashInit", bare_crypto_hash_init)
   V("hashUpdate", bare_crypto_hash_update)
   V("hashFinal", bare_crypto_hash_final)
+  V("randomBytes", bare_crypto_random_bytes)
 #undef V
 
 #define V(name, n) \
