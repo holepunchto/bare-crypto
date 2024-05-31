@@ -51,8 +51,16 @@ exports.createHash = function createHash (algorithm, opts) {
   return new Hash(algorithm, opts)
 }
 
-exports.randomBytes = function randomBytes (size) {
+const randomBytes = exports.randomBytes = function randomBytes (size) {
   return Buffer.from(binding.randomBytes(size))
+}
+
+exports.randomFillSync = function randomFillSync (
+  buffer,
+  offset = 0,
+  size = buffer.length - offset
+) {
+  return buffer.fill(randomBytes(size), offset)
 }
 
 function mapWritable (data) {
