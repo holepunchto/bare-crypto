@@ -34,7 +34,7 @@ const Hash = exports.Hash = class CryptoHash extends Transform {
     return encoding ? digest.toString(encoding) : digest
   }
 
-  _transform (data, cb) {
+  _transform (data, encoding, cb) {
     this.update(data)
 
     cb(null)
