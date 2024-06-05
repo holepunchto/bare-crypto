@@ -30,7 +30,8 @@
   },
   "homepage": "https://github.com/holepunchto/bare-crypto#readme",
   "dependencies": {
-    "bare-stream": "^2.0.0"
+    "bare-stream": "^2.0.0",
+    "bare-type": "^1.0.0"
   },
   "devDependencies": {
     "brittle": "^3.5.0",

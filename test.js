@@ -17,22 +17,34 @@ test('random bytes', (t) => {
 })
 
 test('randomFillSync', (t) => {
-  const len = 40
+  t.plan(8)
+
+  const len = 10
   const half = len / 2
 
-  const buf = Buffer.alloc(len)
+  const testCase = (buf, type) => {
+    crypto.randomFillSync(buf)
 
-  crypto.randomFillSync(buf)
+    const _arraybuffer = ArrayBuffer.isView(buf) ? buf.buffer : buf
 
-  const firstHalf = Buffer.alloc(half)
-  buf.copy(firstHalf)
+    const firstHalf = Buffer.from(_arraybuffer.slice(0, half))
+    const lastHalf = Buffer.from(_arraybuffer.slice(half))
 
-  const lastHalf = Buffer.alloc(half)
-  buf.copy(lastHalf, 0, half)
+    crypto.randomFillSync(buf, half) // randomize only the last half
 
-  // randomize only the last half
-  crypto.randomFillSync(buf, half)
+    const _buffer = Buffer.from(_arraybuffer)
 
-  t.is(buf.compare(firstHalf, 0, half, 0, half), 0, 'first half is equal')
-  t.not(buf.compare(lastHalf, 0, half, half), 0, 'last half is different')
+    t.is(_buffer.compare(firstHalf, 0, half, 0, half), 0, 'first half is equal - ' + type)
+    t.not(_buffer.compare(lastHalf, 0, half, half), 0, 'last half is different - ' + type)
+  }
+
+  const buffer = Buffer.alloc(len)
+  const arrayBuffer = new ArrayBuffer(len)
+  const typedArray = new Uint8Array(len)
+  const dataView = new DataView(new ArrayBuffer(len))
+
+  testCase(buffer, 'Buffer')
+  testCase(typedArray, 'TypedArray')
+  testCase(dataView, 'DataView')
+  testCase(arrayBuffer, 'ArrayBuffer')
 })

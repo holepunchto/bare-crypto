@@ -1,4 +1,5 @@
 const { Transform } = require('bare-stream')
+const type = require('bare-type')
 const binding = require('./binding')
 const constants = exports.constants = require('./lib/constants')
 const errors = exports.errors = require('./lib/errors')
@@ -51,16 +52,24 @@ exports.createHash = function createHash (algorithm, opts) {
   return new Hash(algorithm, opts)
 }
 
-const randomBytes = exports.randomBytes = function randomBytes (size) {
-  return Buffer.from(binding.randomBytes(size))
+exports.randomBytes = function randomBytes (size) {
+  return randomFillSync(Buffer.alloc(size))
 }
 
-exports.randomFillSync = function randomFillSync (
-  buffer,
+const randomFillSync = exports.randomFillSync = function randomFillSync (
+  buf,
   offset = 0,
-  size = buffer.length - offset
+  size = buf.byteLength - offset
 ) {
-  return buffer.fill(randomBytes(size), offset)
+  const bufferTypes = { ARRAY_BUFFER: 0, TYPED_ARRAY: 1, DATA_VIEW: 2 }
+
+  let bufferType = bufferTypes.ARRAY_BUFFER
+  if (type(buf).isTypedArray()) bufferType = bufferTypes.TYPED_ARRAY
+  else if (type(buf).isDataView()) bufferType = bufferTypes.DATA_VIEW
+
+  binding.randomBytes(bufferType, buf, offset, size)
+
+  return buf
 }
 
 function mapWritable (data) {
