@@ -125,34 +125,24 @@ static js_value_t *
 bare_crypto_random_bytes (js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  size_t argc = 4;
-  js_value_t *argv[4];
+  size_t argc = 3;
+  js_value_t *argv[3];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
 
-  assert(argc == 4);
-
-  uint32_t type;
-  err = js_get_value_uint32(env, argv[0], &type);
-  assert(err == 0);
+  assert(argc == 3);
 
   uint8_t *buf;
-  if (type == 0) {
-    err = js_get_arraybuffer_info(env, argv[1], (void **) &buf, NULL);
-  } else if (type == 1) {
-    err = js_get_typedarray_info(env, argv[1], NULL, (void **) &buf, NULL, NULL, NULL);
-  } else {
-    err = js_get_dataview_info(env, argv[1], (void **) &buf, NULL, NULL, NULL);
-  }
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &buf, NULL);
   assert(err == 0);
 
   uint32_t offset;
-  err = js_get_value_uint32(env, argv[2], &offset);
+  err = js_get_value_uint32(env, argv[1], &offset);
   assert(err == 0);
 
   uint32_t num;
-  err = js_get_value_uint32(env, argv[3], &num);
+  err = js_get_value_uint32(env, argv[2], &num);
   assert(err == 0);
 
   err = RAND_bytes(&buf[offset], num);

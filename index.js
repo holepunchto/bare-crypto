@@ -1,5 +1,4 @@
 const { Transform } = require('bare-stream')
-const type = require('bare-type')
 const binding = require('./binding')
 const constants = exports.constants = require('./lib/constants')
 const errors = exports.errors = require('./lib/errors')
@@ -61,14 +60,8 @@ const randomFillSync = exports.randomFillSync = function randomFillSync (
   offset = 0,
   size = buf.byteLength - offset
 ) {
-  const bufferTypes = { ARRAY_BUFFER: 0, TYPED_ARRAY: 1, DATA_VIEW: 2 }
-
-  let bufferType = bufferTypes.ARRAY_BUFFER
-  if (type(buf).isTypedArray()) bufferType = bufferTypes.TYPED_ARRAY
-  else if (type(buf).isDataView()) bufferType = bufferTypes.DATA_VIEW
-
-  binding.randomBytes(bufferType, buf, offset, size)
-
+  const arraybuffer = ArrayBuffer.isView(buf) ? buf.buffer : buf
+  binding.randomBytes(arraybuffer, offset, size)
   return buf
 }
 
