@@ -16,35 +16,80 @@ test('random bytes', (t) => {
   t.is(crypto.randomBytes(4).byteLength, 4)
 })
 
-test('randomFillSync', (t) => {
-  t.plan(8)
+test('random fill', (t) => {
+  t.test('buffer', (t) => {
+    const b = Buffer.alloc(4)
 
-  const len = 10
-  const half = len / 2
+    crypto.randomFillSync(b, 1, 2)
 
-  const testCase = (buf, type) => {
-    crypto.randomFillSync(buf)
+    t.comment(b)
 
-    const _arraybuffer = ArrayBuffer.isView(buf) ? buf.buffer : buf
+    t.is(b[0], 0)
+    t.is(b[3], 0)
+  })
 
-    const firstHalf = Buffer.from(_arraybuffer.slice(0, half))
-    const lastHalf = Buffer.from(_arraybuffer.slice(half))
+  t.test('buffer, subarray', (t) => {
+    const b = Buffer.alloc(8)
 
-    crypto.randomFillSync(buf, half) // randomize only the last half
+    crypto.randomFillSync(b.subarray(2, 6), 1, 2)
 
-    const _buffer = Buffer.from(_arraybuffer)
+    t.comment(b)
 
-    t.is(_buffer.compare(firstHalf, 0, half, 0, half), 0, 'first half is equal - ' + type)
-    t.not(_buffer.compare(lastHalf, 0, half, half), 0, 'last half is different - ' + type)
-  }
+    t.is(b[0], 0)
+    t.is(b[1], 0)
+    t.is(b[2], 0)
+    t.is(b[5], 0)
+    t.is(b[6], 0)
+    t.is(b[7], 0)
+  })
 
-  const buffer = Buffer.alloc(len)
-  const arrayBuffer = new ArrayBuffer(len)
-  const typedArray = new Uint8Array(len)
-  const dataView = new DataView(new ArrayBuffer(len))
+  t.test('arraybuffer', (t) => {
+    const b = new ArrayBuffer(4)
 
-  testCase(buffer, 'Buffer')
-  testCase(typedArray, 'TypedArray')
-  testCase(dataView, 'DataView')
-  testCase(arrayBuffer, 'ArrayBuffer')
+    crypto.randomFillSync(b, 1, 2)
+
+    t.comment(b)
+
+    const v = Buffer.from(b)
+
+    t.is(v[0], 0)
+    t.is(v[3], 0)
+  })
+
+  t.test('uint16array', (t) => {
+    const b = new Uint16Array(4)
+
+    crypto.randomFillSync(b, 1, 2)
+
+    t.comment(b)
+
+    t.is(b[0], 0)
+    t.is(b[3], 0)
+  })
+
+  t.test('uint16array, subarray', (t) => {
+    const b = new Uint16Array(8)
+
+    crypto.randomFillSync(b.subarray(2, 6), 1, 2)
+
+    t.comment(b)
+
+    t.is(b[0], 0)
+    t.is(b[1], 0)
+    t.is(b[2], 0)
+    t.is(b[5], 0)
+    t.is(b[6], 0)
+    t.is(b[7], 0)
+  })
+
+  t.test('dataview', (t) => {
+    const b = new DataView(new ArrayBuffer(4))
+
+    crypto.randomFillSync(b, 1, 2)
+
+    t.comment(b)
+
+    t.is(b.getUint8(0), 0)
+    t.is(b.getUint8(3), 0)
+  })
 })
