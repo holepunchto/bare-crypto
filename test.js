@@ -92,4 +92,21 @@ test('random fill', (t) => {
     t.is(b.getUint8(0), 0)
     t.is(b.getUint8(3), 0)
   })
+
+  t.test('dataview, subarray', (t) => {
+    const b = new ArrayBuffer(8)
+
+    crypto.randomFillSync(new DataView(b, 2, 4), 1, 2)
+
+    t.comment(b)
+
+    const v = Buffer.from(b)
+
+    t.is(v[0], 0)
+    t.is(v[1], 0)
+    t.is(v[2], 0)
+    t.is(v[5], 0)
+    t.is(v[6], 0)
+    t.is(v[7], 0)
+  })
 })
