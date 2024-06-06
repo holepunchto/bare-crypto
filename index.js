@@ -55,13 +55,19 @@ exports.randomBytes = function randomBytes (size) {
   return randomFillSync(Buffer.alloc(size))
 }
 
-const randomFillSync = exports.randomFillSync = function randomFillSync (
-  buf,
-  offset = 0,
-  size = buf.byteLength - offset
-) {
-  const arraybuffer = ArrayBuffer.isView(buf) ? buf.buffer : buf
-  binding.randomBytes(arraybuffer, offset, size)
+const randomFillSync = exports.randomFillSync = function randomFillSync (buf, offset, size) {
+  const isView = ArrayBuffer.isView(buf)
+
+  if (offset !== undefined && buf.BYTES_PER_ELEMENT) offset *= buf.BYTES_PER_ELEMENT
+  if (size !== undefined && buf.BYTES_PER_ELEMENT) size *= buf.BYTES_PER_ELEMENT
+
+  if (offset === undefined) offset = buf.byteOffset || 0
+  else if (isView) offset += buf.byteOffset
+
+  if (size === undefined) size = buf.byteLength - offset
+
+  binding.randomBytes(isView ? buf.buffer : buf, offset, size)
+
   return buf
 }
 

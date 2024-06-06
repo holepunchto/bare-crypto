@@ -82,6 +82,17 @@ test('random fill', (t) => {
     t.is(b[7], 0)
   })
 
+  t.test('uint32array, default size', (t) => {
+    const b = new Uint32Array(4)
+
+    crypto.randomFillSync(b, 2)
+
+    t.comment(b)
+
+    t.is(b[0], 0)
+    t.is(b[1], 0)
+  })
+
   t.test('dataview', (t) => {
     const b = new DataView(new ArrayBuffer(4))
 
