@@ -57,14 +57,19 @@ exports.randomBytes = function randomBytes (size) {
 
 const randomFillSync = exports.randomFillSync = function randomFillSync (buf, offset, size) {
   const isView = ArrayBuffer.isView(buf)
+  const elementSize = buf.BYTES_PER_ELEMENT || 1
 
-  if (offset !== undefined && buf.BYTES_PER_ELEMENT) offset *= buf.BYTES_PER_ELEMENT
-  if (size !== undefined && buf.BYTES_PER_ELEMENT) size *= buf.BYTES_PER_ELEMENT
-
-  if (offset === undefined) offset = buf.byteOffset || 0
-  else if (isView) offset += buf.byteOffset
+  if (offset === undefined) offset = 0
+  else offset *= elementSize
 
   if (size === undefined) size = buf.byteLength - offset
+  else size *= elementSize
+
+  if (offset < 0 || offset > buf.byteLength) throw new RangeError('offset is out of range')
+  if (size < 0 || size > buf.byteLength) throw new RangeError('size is out of range')
+  if (offset + size > buf.byteLength) throw new RangeError('offset + size is out of range')
+
+  if (isView) offset += buf.byteOffset
 
   binding.randomBytes(isView ? buf.buffer : buf, offset, size)
 
