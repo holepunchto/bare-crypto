@@ -43,6 +43,30 @@ test('random fill', (t) => {
     t.is(b[7], 0)
   })
 
+  t.test('buffer, negative offset', (t) => {
+    const b = Buffer.alloc(4)
+
+    t.exception.all(() => crypto.randomFillSync(b.subarray(1, 3), -1, 2))
+  })
+
+  t.test('buffer, negative size', (t) => {
+    const b = Buffer.alloc(4)
+
+    t.exception.all(() => crypto.randomFillSync(b.subarray(1, 3), 0, -2))
+  })
+
+  t.test('buffer, size out of bounds', (t) => {
+    const b = Buffer.alloc(4)
+
+    t.exception.all(() => crypto.randomFillSync(b.subarray(1, 3), 0, 3))
+  })
+
+  t.test('buffer, offset + size out of bounds', (t) => {
+    const b = Buffer.alloc(4)
+
+    t.exception.all(() => crypto.randomFillSync(b.subarray(1, 3), 1, 2))
+  })
+
   t.test('arraybuffer', (t) => {
     const b = new ArrayBuffer(4)
 
@@ -54,6 +78,30 @@ test('random fill', (t) => {
 
     t.is(v[0], 0)
     t.is(v[3], 0)
+  })
+
+  t.test('arraybuffer, negative offset', (t) => {
+    const b = new ArrayBuffer(2)
+
+    t.exception.all(() => crypto.randomFillSync(b, -1, 2))
+  })
+
+  t.test('arraybuffer, negative size', (t) => {
+    const b = new ArrayBuffer(2)
+
+    t.exception.all(() => crypto.randomFillSync(b, 0, -2))
+  })
+
+  t.test('arraybuffer, size out of bounds', (t) => {
+    const b = new ArrayBuffer(2)
+
+    t.exception.all(() => crypto.randomFillSync(b, 0, 3))
+  })
+
+  t.test('arraybuffer, offset + size out of bounds', (t) => {
+    const b = new ArrayBuffer(2)
+
+    t.exception.all(() => crypto.randomFillSync(b, 1, 2))
   })
 
   t.test('uint16array', (t) => {
