@@ -125,28 +125,30 @@ static js_value_t *
 bare_crypto_random_bytes (js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  size_t argc = 1;
-  js_value_t *argv[1];
+  size_t argc = 3;
+  js_value_t *argv[3];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
 
-  assert(argc == 1);
-
-  uint32_t len;
-  err = js_get_value_uint32(env, argv[0], &len);
-  assert(err == 0);
-
-  js_value_t *result;
+  assert(argc == 3);
 
   uint8_t *buf;
-  err = js_create_arraybuffer(env, len, (void **) &buf, &result);
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &buf, NULL);
   assert(err == 0);
 
-  err = RAND_bytes(buf, len);
+  uint32_t offset;
+  err = js_get_value_uint32(env, argv[1], &offset);
+  assert(err == 0);
+
+  uint32_t num;
+  err = js_get_value_uint32(env, argv[2], &num);
+  assert(err == 0);
+
+  err = RAND_bytes(&buf[offset], num);
   assert(err == 1);
 
-  return result;
+  return NULL;
 }
 
 static js_value_t *
