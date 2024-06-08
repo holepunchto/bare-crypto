@@ -5,7 +5,7 @@ const errors = exports.errors = require('./lib/errors')
 
 const Hash = exports.Hash = class CryptoHash extends Transform {
   constructor (algorithm, opts = {}) {
-    super({ ...opts, mapWritable })
+    super(opts)
 
     if (typeof algorithm === 'string') {
       if (algorithm in constants.hash) algorithm = constants.hash[algorithm]
@@ -23,7 +23,9 @@ const Hash = exports.Hash = class CryptoHash extends Transform {
   }
 
   update (data, encoding = 'utf8') {
-    binding.hashUpdate(this._handle, typeof data === 'string' ? Buffer.from(data, encoding) : data)
+    if (typeof data === 'string') data = Buffer.from(data, encoding)
+
+    binding.hashUpdate(this._handle, data)
 
     return this
   }
@@ -51,31 +53,45 @@ exports.createHash = function createHash (algorithm, opts) {
   return new Hash(algorithm, opts)
 }
 
-exports.randomBytes = function randomBytes (size) {
-  return randomFillSync(Buffer.alloc(size))
+exports.randomBytes = function randomBytes (size, cb) {
+  const buffer = Buffer.allocUnsafe(size)
+  randomFill(buffer)
+  if (cb) queueMicrotask(() => cb(null, buffer))
+  else return buffer
 }
 
-const randomFillSync = exports.randomFillSync = function randomFillSync (buf, offset, size) {
-  const isView = ArrayBuffer.isView(buf)
-  const elementSize = buf.BYTES_PER_ELEMENT || 1
+const randomFill = exports.randomFill = function randomFill (buffer, offset, size, cb) {
+  if (typeof offset === 'function') {
+    cb = offset
+    offset = undefined
+  } else if (typeof size === 'function') {
+    cb = size
+    size = undefined
+  }
+
+  const elementSize = buffer.BYTES_PER_ELEMENT || 1
 
   if (offset === undefined) offset = 0
   else offset *= elementSize
 
-  if (size === undefined) size = buf.byteLength - offset
+  if (size === undefined) size = buffer.byteLength - offset
   else size *= elementSize
 
-  if (offset < 0 || offset > buf.byteLength) throw new RangeError('offset is out of range')
-  if (size < 0 || size > buf.byteLength) throw new RangeError('size is out of range')
-  if (offset + size > buf.byteLength) throw new RangeError('offset + size is out of range')
+  if (offset < 0 || offset > buffer.byteLength) throw new RangeError('offset is out of range')
+  if (size < 0 || size > buffer.byteLength) throw new RangeError('size is out of range')
+  if (offset + size > buffer.byteLength) throw new RangeError('offset + size is out of range')
 
-  if (isView) offset += buf.byteOffset
+  const isView = ArrayBuffer.isView(buffer)
 
-  binding.randomBytes(isView ? buf.buffer : buf, offset, size)
+  if (isView) offset += buffer.byteOffset
 
-  return buf
+  binding.randomFill(isView ? buffer.buffer : buffer, offset, size)
+
+  if (cb) queueMicrotask(() => cb(null, buffer))
+  else return buffer
 }
 
-function mapWritable (data) {
-  return typeof data === 'string' ? Buffer.from(data) : data
+// For Node.js compatibility
+exports.randomFillSync = function randomFillSync (buffer, offset, size) {
+  return randomFill(buffer, offset, size)
 }

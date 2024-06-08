@@ -122,7 +122,7 @@ bare_crypto_hash_final (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_crypto_random_bytes (js_env_t *env, js_callback_info_t *info) {
+bare_crypto_random_fill (js_env_t *env, js_callback_info_t *info) {
   int err;
 
   size_t argc = 3;
@@ -133,19 +133,19 @@ bare_crypto_random_bytes (js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 3);
 
-  uint8_t *buf;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &buf, NULL);
+  uint8_t *data;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &data, NULL);
   assert(err == 0);
 
   uint32_t offset;
   err = js_get_value_uint32(env, argv[1], &offset);
   assert(err == 0);
 
-  uint32_t num;
-  err = js_get_value_uint32(env, argv[2], &num);
+  uint32_t len;
+  err = js_get_value_uint32(env, argv[2], &len);
   assert(err == 0);
 
-  err = RAND_bytes(&buf[offset], num);
+  err = RAND_bytes(&data[offset], len);
   assert(err == 1);
 
   return NULL;
@@ -167,7 +167,8 @@ bare_crypto_exports (js_env_t *env, js_value_t *exports) {
   V("hashInit", bare_crypto_hash_init)
   V("hashUpdate", bare_crypto_hash_update)
   V("hashFinal", bare_crypto_hash_final)
-  V("randomBytes", bare_crypto_random_bytes)
+
+  V("randomFill", bare_crypto_random_fill)
 #undef V
 
 #define V(name, n) \
