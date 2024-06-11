@@ -17,8 +17,9 @@
     "prebuilds",
     "vendor/boringssl"
   ],
+  "addon": true,
   "scripts": {
-    "test": "standard & bare test.js"
+    "test": "standard && bare test.js"
   },
   "repository": {
     "type": "git",
