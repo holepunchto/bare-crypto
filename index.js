@@ -81,11 +81,12 @@ const randomFill = exports.randomFill = function randomFill (buffer, offset, siz
   if (size < 0 || size > buffer.byteLength) throw new RangeError('size is out of range')
   if (offset + size > buffer.byteLength) throw new RangeError('offset + size is out of range')
 
-  const isView = ArrayBuffer.isView(buffer)
+  if (ArrayBuffer.isView(buffer)) {
+    offset += buffer.byteOffset
+    buffer = buffer.buffer
+  }
 
-  if (isView) offset += buffer.byteOffset
-
-  binding.randomFill(isView ? buffer.buffer : buffer, offset, size)
+  binding.randomFill(buffer, offset, size)
 
   if (cb) queueMicrotask(() => cb(null, buffer))
   else return buffer
