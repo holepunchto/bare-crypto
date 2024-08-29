@@ -24,6 +24,12 @@ if(NOT TARGET ssl)
   endif()
 
   add_subdirectory(vendor/boringssl EXCLUDE_FROM_ALL)
+
+  set_target_properties(
+    bssl
+    PROPERTIES
+    MACOSX_BUNDLE OFF
+  )
 endif()
 
 add_bare_module(bare_crypto)
