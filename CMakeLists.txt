@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 
+set(CMAKE_MACOSX_BUNDLE OFF)
+
 project(bare_crypto C)
 
 include(bare)
@@ -7,14 +9,6 @@ include(bare)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if(NOT TARGET ssl)
-  set(
-    INSTALL_DESTINATION_DEFAULT
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    BUNDLE DESTINATION ${CMAKE_INSTALL_BINDIR}
-  )
-
   if(MSVC)
     set(OPENSSL_NO_ASM ON)
   endif()
@@ -24,12 +18,6 @@ if(NOT TARGET ssl)
   endif()
 
   add_subdirectory(vendor/boringssl EXCLUDE_FROM_ALL)
-
-  set_target_properties(
-    bssl
-    PROPERTIES
-    MACOSX_BUNDLE OFF
-  )
 endif()
 
 add_bare_module(bare_crypto)
