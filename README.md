@@ -26,7 +26,7 @@ console.log(digest)
 
 Create a new `Hash` instance with the specified algorithm and options. The options are passed to [`new Transform()`](https://github.com/mafintosh/streamxts--new-streamtransformoptions).
 
-#### `const bytes = randomBytes(size)`
+#### `const buffer = randomBytes(size)`
 
 Generate cryptographically secure random bytes.
 
@@ -34,7 +34,7 @@ Generate cryptographically secure random bytes.
 
 Generate cryptographically secure random bytes, asynchronously providing the result in `callback`. The callback signature is `callback(err, buffer)`.
 
-#### `randomFill(buffer[, offset][, size])`
+#### `buffer = randomFill(buffer[, offset][, size])`
 
 Fill a buffer with cryptographically secure random bytes.
 
