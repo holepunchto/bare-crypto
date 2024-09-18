@@ -32,7 +32,7 @@ Generate cryptographically secure random bytes.
 
 #### `randomBytes(size, callback)`
 
-generate cryptographically secure random bytes, asynchronously providing the result in `callback`. The callback signature is `callback(err, buffer)`.
+Generate cryptographically secure random bytes, asynchronously providing the result in `callback`. The callback signature is `callback(err, buffer)`.
 
 #### `randomFill(buffer[, offset][, size])`
 
