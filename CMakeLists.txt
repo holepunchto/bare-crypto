@@ -4,7 +4,7 @@ find_package(cmake-bare REQUIRED PATHS node_modules/cmake-bare)
 
 set(CMAKE_MACOSX_BUNDLE OFF)
 
-project(bare_crypto C)
+project(bare_crypto C CXX)
 
 bare_target(target)
 
