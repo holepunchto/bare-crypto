@@ -1,22 +1,22 @@
 cmake_minimum_required(VERSION 3.25)
 
+find_package(cmake-bare REQUIRED PATHS node_modules/cmake-bare)
+
 set(CMAKE_MACOSX_BUNDLE OFF)
 
-project(bare_crypto C)
+project(bare_crypto C CXX)
 
-include(bare)
+bare_target(target)
 
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+if(target MATCHES "win32")
+  set(OPENSSL_NO_ASM ON)
+
+  add_definitions(-DWIN32_LEAN_AND_MEAN)
+else()
+  enable_language(ASM)
+endif()
 
 if(NOT TARGET ssl)
-  if(MSVC)
-    set(OPENSSL_NO_ASM ON)
-  endif()
-
-  if(WIN32)
-    add_definitions(-DWIN32_LEAN_AND_MEAN)
-  endif()
-
   add_subdirectory(vendor/boringssl EXCLUDE_FROM_ALL)
 endif()
 
