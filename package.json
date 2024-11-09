@@ -14,8 +14,7 @@
     "binding.js",
     "CMakeLists.txt",
     "lib",
-    "prebuilds",
-    "vendor/boringssl"
+    "prebuilds"
   ],
   "addon": true,
   "scripts": {
@@ -37,6 +36,7 @@
   "devDependencies": {
     "brittle": "^3.5.0",
     "cmake-bare": "^1.1.6",
+    "cmake-fetch": "^1.0.0",
     "standard": "^17.0.0"
   }
 }

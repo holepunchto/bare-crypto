@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 
 find_package(cmake-bare REQUIRED PATHS node_modules/cmake-bare)
+find_package(cmake-fetch REQUIRED PATHS node_modules/cmake-fetch)
 
 set(CMAKE_MACOSX_BUNDLE OFF)
 
@@ -16,9 +17,7 @@ else()
   enable_language(ASM)
 endif()
 
-if(NOT TARGET ssl)
-  add_subdirectory(vendor/boringssl EXCLUDE_FROM_ALL)
-endif()
+fetch_package("github:google/boringssl#ee3f946")
 
 add_bare_module(bare_crypto)
 
