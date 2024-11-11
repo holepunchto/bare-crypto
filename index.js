@@ -96,3 +96,12 @@ const randomFill = exports.randomFill = function randomFill (buffer, offset, siz
 exports.randomFillSync = function randomFillSync (buffer, offset, size) {
   return randomFill(buffer, offset, size)
 }
+
+
+// For Node.js libs that use webcrypto api
+exports.webcrypto =  {}
+
+exports.webcrypto.getRandomValues = function(typedArr) {
+  exports.randomFillSync(typedArr)
+  return typedArr
+}
