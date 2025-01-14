@@ -57,7 +57,7 @@ exports.createHash = function createHash(algorithm, opts) {
 
 exports.randomBytes = function randomBytes(size, cb) {
   const buffer = Buffer.allocUnsafe(size)
-  randomFill(buffer)
+  exports.randomFill(buffer)
   if (cb) queueMicrotask(() => cb(null, buffer))
   else return buffer
 }
