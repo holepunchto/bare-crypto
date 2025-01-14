@@ -3,7 +3,7 @@ const binding = require('./binding')
 const constants = (exports.constants = require('./lib/constants'))
 const errors = (exports.errors = require('./lib/errors'))
 
-const Hash = (exports.Hash = class CryptoHash extends Transform {
+exports.Hash = class CryptoHash extends Transform {
   constructor(algorithm, opts = {}) {
     super(opts)
 
@@ -49,10 +49,10 @@ const Hash = (exports.Hash = class CryptoHash extends Transform {
 
     cb(null)
   }
-})
+}
 
 exports.createHash = function createHash(algorithm, opts) {
-  return new Hash(algorithm, opts)
+  return new exports.Hash(algorithm, opts)
 }
 
 exports.randomBytes = function randomBytes(size, cb) {
@@ -62,12 +62,7 @@ exports.randomBytes = function randomBytes(size, cb) {
   else return buffer
 }
 
-const randomFill = (exports.randomFill = function randomFill(
-  buffer,
-  offset,
-  size,
-  cb
-) {
+exports.randomFill = function randomFill(buffer, offset, size, cb) {
   if (typeof offset === 'function') {
     cb = offset
     offset = undefined
@@ -100,9 +95,9 @@ const randomFill = (exports.randomFill = function randomFill(
 
   if (cb) queueMicrotask(() => cb(null, buffer))
   else return buffer
-})
+}
 
 // For Node.js compatibility
 exports.randomFillSync = function randomFillSync(buffer, offset, size) {
-  return randomFill(buffer, offset, size)
+  return exports.randomFill(buffer, offset, size)
 }

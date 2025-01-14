@@ -35,7 +35,7 @@
   },
   "homepage": "https://github.com/holepunchto/bare-crypto#readme",
   "dependencies": {
-    "bare-stream": "^2.0.0"
+    "bare-stream": "^2.6.3"
   },
   "devDependencies": {
     "bare-buffer": "^3.0.1",

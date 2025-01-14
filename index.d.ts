@@ -1,5 +1,5 @@
 import { Transform, TransformOptions } from 'bare-stream'
-import { Buffer, BufferEncoding } from 'bare-buffer'
+import Buffer, { BufferEncoding } from 'bare-buffer'
 
 type Algorithm = 'MD5' | 'SHA1' | 'SHA256' | 'SHA512' | 'BLAKE2B256'
 
@@ -12,48 +12,56 @@ declare class CryptoError extends Error {
 export class Hash extends Transform {
   constructor(
     algorithm: Algorithm | Lowercase<Algorithm> | number,
-    opts?: TransformOptions
+    opts?: TransformOptions<Hash>
   )
 
-  update(data: string | Buffer | DataView, encoding?: BufferEncoding): this
+  update(data: string, encoding?: BufferEncoding): this
+  update(data: Buffer | DataView): this
 
-  digest(encoding?: BufferEncoding): string | Buffer
+  digest(encoding: BufferEncoding): string
+  digest(): Buffer
 }
 
 export function createHash(
   algorithm: Algorithm | Lowercase<Algorithm> | number,
-  opts?: TransformOptions
+  opts?: TransformOptions<Hash>
 ): Hash
-
-export function randomBytes(
-  size: number,
-  callback: (error: null, buffer: Buffer) => void
-): void
 
 export function randomBytes(size: number): Buffer
 
-export function randomFill<B extends ArrayBuffer | Buffer | DataView>(
+export function randomBytes(
+  size: number,
+  callback: (err: Error | null, buffer: Buffer) => void
+): void
+
+export function randomFill<B extends ArrayBuffer | ArrayBufferView>(
   buffer: B,
   offset?: number,
   size?: number
 ): B
 
-export function randomFill<B extends ArrayBuffer | Buffer | DataView>(
+export function randomFill<B extends ArrayBuffer | ArrayBufferView>(
+  buffer: B,
+  callback: (err: Error | null, buffer: B) => void
+): void
+
+export function randomFill<B extends ArrayBuffer | ArrayBufferView>(
+  buffer: B,
+  offset: number,
+  callback: (err: Error | null, buffer: B) => void
+): void
+
+export function randomFill<B extends ArrayBuffer | ArrayBufferView>(
   buffer: B,
   offset: number,
   size: number,
-  callback: (err: null, buffer: B) => void
+  callback: (err: Error | null, buffer: B) => void
 ): void
 
-export function randomFill<B extends ArrayBuffer | Buffer | DataView>(
+export function randomFillSync<B extends ArrayBuffer | ArrayBufferView>(
   buffer: B,
-  offset: number,
-  callback: (err: null, buffer: B) => void
-): void
+  offset?: number,
+  size?: number
+): B
 
-export function randomFill<B extends ArrayBuffer | Buffer | DataView>(
-  buffer: B,
-  callback: (err: null, buffer: B) => void
-): void
-
-export { CryptoError as errors, randomFill as randomFillSync }
+export { CryptoError as errors }
