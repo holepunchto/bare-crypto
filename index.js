@@ -1,10 +1,10 @@
 const { Transform } = require('bare-stream')
 const binding = require('./binding')
-const constants = exports.constants = require('./lib/constants')
-const errors = exports.errors = require('./lib/errors')
+const constants = (exports.constants = require('./lib/constants'))
+const errors = (exports.errors = require('./lib/errors'))
 
-const Hash = exports.Hash = class CryptoHash extends Transform {
-  constructor (algorithm, opts = {}) {
+exports.Hash = class CryptoHash extends Transform {
+  constructor(algorithm, opts = {}) {
     super(opts)
 
     if (typeof algorithm === 'string') {
@@ -14,7 +14,9 @@ const Hash = exports.Hash = class CryptoHash extends Transform {
 
         if (algorithm in constants.hash) algorithm = constants.hash[algorithm]
         else {
-          throw errors.UNSUPPORTED_DIGEST_METHOD(`Unsupported digest method '${algorithm}'`)
+          throw errors.UNSUPPORTED_DIGEST_METHOD(
+            `Unsupported digest method '${algorithm}'`
+          )
         }
       }
     }
@@ -22,7 +24,7 @@ const Hash = exports.Hash = class CryptoHash extends Transform {
     this._handle = binding.hashInit(algorithm)
   }
 
-  update (data, encoding = 'utf8') {
+  update(data, encoding = 'utf8') {
     if (typeof data === 'string') data = Buffer.from(data, encoding)
 
     binding.hashUpdate(this._handle, data)
@@ -30,37 +32,37 @@ const Hash = exports.Hash = class CryptoHash extends Transform {
     return this
   }
 
-  digest (encoding) {
+  digest(encoding) {
     const digest = Buffer.from(binding.hashFinal(this._handle))
 
     return encoding ? digest.toString(encoding) : digest
   }
 
-  _transform (data, encoding, cb) {
+  _transform(data, encoding, cb) {
     this.update(data)
 
     cb(null)
   }
 
-  _flush (cb) {
+  _flush(cb) {
     this.push(this.digest())
 
     cb(null)
   }
 }
 
-exports.createHash = function createHash (algorithm, opts) {
-  return new Hash(algorithm, opts)
+exports.createHash = function createHash(algorithm, opts) {
+  return new exports.Hash(algorithm, opts)
 }
 
-exports.randomBytes = function randomBytes (size, cb) {
+exports.randomBytes = function randomBytes(size, cb) {
   const buffer = Buffer.allocUnsafe(size)
-  randomFill(buffer)
+  exports.randomFill(buffer)
   if (cb) queueMicrotask(() => cb(null, buffer))
   else return buffer
 }
 
-const randomFill = exports.randomFill = function randomFill (buffer, offset, size, cb) {
+exports.randomFill = function randomFill(buffer, offset, size, cb) {
   if (typeof offset === 'function') {
     cb = offset
     offset = undefined
@@ -77,9 +79,12 @@ const randomFill = exports.randomFill = function randomFill (buffer, offset, siz
   if (size === undefined) size = buffer.byteLength - offset
   else size *= elementSize
 
-  if (offset < 0 || offset > buffer.byteLength) throw new RangeError('offset is out of range')
-  if (size < 0 || size > buffer.byteLength) throw new RangeError('size is out of range')
-  if (offset + size > buffer.byteLength) throw new RangeError('offset + size is out of range')
+  if (offset < 0 || offset > buffer.byteLength)
+    throw new RangeError('offset is out of range')
+  if (size < 0 || size > buffer.byteLength)
+    throw new RangeError('size is out of range')
+  if (offset + size > buffer.byteLength)
+    throw new RangeError('offset + size is out of range')
 
   if (ArrayBuffer.isView(buffer)) {
     offset += buffer.byteOffset
@@ -93,6 +98,6 @@ const randomFill = exports.randomFill = function randomFill (buffer, offset, siz
 }
 
 // For Node.js compatibility
-exports.randomFillSync = function randomFillSync (buffer, offset, size) {
-  return randomFill(buffer, offset, size)
+exports.randomFillSync = function randomFillSync(buffer, offset, size) {
+  return exports.randomFill(buffer, offset, size)
 }
