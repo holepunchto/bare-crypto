@@ -79,19 +79,28 @@ exports.randomFill = function randomFill(buffer, offset, size, cb) {
   if (size === undefined) size = buffer.byteLength - offset
   else size *= elementSize
 
-  if (offset < 0 || offset > buffer.byteLength)
+  if (offset < 0 || offset > buffer.byteLength) {
     throw new RangeError('offset is out of range')
-  if (size < 0 || size > buffer.byteLength)
+  }
+
+  if (size < 0 || size > buffer.byteLength) {
     throw new RangeError('size is out of range')
-  if (offset + size > buffer.byteLength)
+  }
+
+  if (offset + size > buffer.byteLength) {
     throw new RangeError('offset + size is out of range')
+  }
+
+  let arraybuffer
 
   if (ArrayBuffer.isView(buffer)) {
     offset += buffer.byteOffset
-    buffer = buffer.buffer
+    arraybuffer = buffer.buffer
+  } else {
+    arraybuffer = buffer
   }
 
-  binding.randomFill(buffer, offset, size)
+  binding.randomFill(arraybuffer, offset, size)
 
   if (cb) queueMicrotask(() => cb(null, buffer))
   else return buffer
