@@ -65,3 +65,5 @@ export function randomFillSync<B extends ArrayBuffer | ArrayBufferView>(
 ): B
 
 export { CryptoError as errors }
+
+export * as webcrypto from './web'

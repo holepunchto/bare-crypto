@@ -101,3 +101,6 @@ exports.randomFill = function randomFill(buffer, offset, size, cb) {
 exports.randomFillSync = function randomFillSync(buffer, offset, size) {
   return exports.randomFill(buffer, offset, size)
 }
+
+// For Node.js compatibility
+exports.webcrypto = require('./web')
