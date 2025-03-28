@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.31)
 
 find_package(cmake-bare REQUIRED PATHS node_modules/cmake-bare)
 find_package(cmake-fetch REQUIRED PATHS node_modules/cmake-fetch)
@@ -17,7 +17,7 @@ else()
   enable_language(ASM)
 endif()
 
-fetch_package("github:google/boringssl#ee3f946")
+fetch_package("github:google/boringssl#0.20250311.0")
 
 add_bare_module(bare_crypto)
 
