@@ -20,6 +20,10 @@ endif()
 
 fetch_package("github:google/boringssl#0.20250311.0")
 
+if(TARGET c++)
+  target_link_libraries(ssl c++)
+endif()
+
 add_bare_module(bare_crypto)
 
 target_sources(
