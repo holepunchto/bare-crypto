@@ -35,7 +35,9 @@ exports.Hash = class CryptoHash extends Transform {
   digest(encoding) {
     const digest = Buffer.from(binding.hashFinal(this._handle))
 
-    return encoding ? digest.toString(encoding) : digest
+    return encoding && encoding !== 'buffer'
+      ? digest.toString(encoding)
+      : digest
   }
 
   _transform(data, encoding, cb) {

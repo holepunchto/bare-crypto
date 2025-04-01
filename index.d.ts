@@ -16,7 +16,7 @@ export class Hash extends Transform {
   )
 
   update(data: string, encoding?: BufferEncoding): this
-  update(data: Buffer): this
+  update(data: Buffer, encoding?: 'buffer'): this
 
   digest(encoding: BufferEncoding): string
   digest(): Buffer
