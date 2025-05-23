@@ -11,14 +11,16 @@ project(bare_crypto C CXX)
 bare_target(target)
 
 if(target MATCHES "win32")
-  set(OPENSSL_NO_ASM ON)
-
   add_definitions(-DWIN32_LEAN_AND_MEAN)
+endif()
+
+if(target MATCHES "win32-x64")
+  enable_language(ASM_NASM)
 else()
   enable_language(ASM)
 endif()
 
-fetch_package("github:google/boringssl#0.20250311.0")
+fetch_package("github:google/boringssl#0.20250514.0")
 
 add_bare_module(bare_crypto)
 
