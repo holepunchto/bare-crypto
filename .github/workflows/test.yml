@@ -31,9 +31,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
-      - run: |
-          choco install nasm
-          "C:\Program Files\NASM" | Out-File -FilePath "$env:GITHUB_PATH" -Append
+      - run: choco install nasm
         if: ${{ matrix.platform == 'win32' }}
       - run: npm install -g bare-runtime bare-make
       - run: npm install
