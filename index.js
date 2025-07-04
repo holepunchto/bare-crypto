@@ -27,7 +27,12 @@ exports.Hash = class CryptoHash extends Transform {
   update(data, encoding = 'utf8') {
     if (typeof data === 'string') data = Buffer.from(data, encoding)
 
-    binding.hashUpdate(this._handle, data)
+    binding.hashUpdate(
+      this._handle,
+      data.buffer,
+      data.byteOffset,
+      data.byteLength
+    )
 
     return this
   }
@@ -111,6 +116,64 @@ exports.randomFill = function randomFill(buffer, offset, size, cb) {
 // For Node.js compatibility
 exports.randomFillSync = function randomFillSync(buffer, offset, size) {
   return exports.randomFill(buffer, offset, size)
+}
+
+exports.pbkdf2 = function pbkdf2(
+  password,
+  salt,
+  iterations,
+  keylen,
+  digest,
+  cb
+) {
+  if (iterations <= 0) {
+    throw new RangeError('iterations is out of range')
+  }
+
+  if (typeof password === 'string') password = Buffer.from(password)
+  if (typeof salt === 'string') salt = Buffer.from(salt)
+
+  if (typeof digest === 'string') {
+    if (digest in constants.hash) digest = constants.hash[digest]
+    else {
+      digest = digest.toUpperCase()
+
+      if (digest in constants.hash) digest = constants.hash[digest]
+      else {
+        throw errors.UNSUPPORTED_DIGEST_METHOD(
+          `Unsupported digest method '${digest}'`
+        )
+      }
+    }
+  }
+
+  const buffer = Buffer.from(
+    binding.pbkdf2(
+      password.buffer,
+      password.byteOffset,
+      password.byteLength,
+      salt.buffer,
+      salt.byteOffset,
+      salt.byteLength,
+      iterations,
+      digest,
+      keylen
+    )
+  )
+
+  if (cb) queueMicrotask(() => cb(null, buffer))
+  else return buffer
+}
+
+// For Node.js compatibility
+exports.pbkdf2Sync = function pbkdf2Sync(
+  password,
+  salt,
+  iterations,
+  keylen,
+  digest
+) {
+  return exports.pbkdf2(password, salt, iterations, keylen, digest)
 }
 
 // For Node.js compatibility
