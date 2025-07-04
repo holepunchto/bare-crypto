@@ -64,6 +64,31 @@ export function randomFillSync<B extends ArrayBuffer | ArrayBufferView>(
   size?: number
 ): B
 
+export function pbkdf2(
+  password: string | ArrayBuffer | ArrayBufferView,
+  salt: string | ArrayBuffer | ArrayBufferView,
+  iterations: number,
+  keylen: number,
+  digest: Algorithm | Lowercase<Algorithm> | number
+): Buffer
+
+export function pbkdf2(
+  password: string | ArrayBuffer | ArrayBufferView,
+  salt: string | ArrayBuffer | ArrayBufferView,
+  iterations: number,
+  keylen: number,
+  digest: Algorithm | Lowercase<Algorithm> | number,
+  callback: (err: Error | null, buffer: Buffer) => void
+): void
+
+export function pbkdf2Sync(
+  password: string | ArrayBuffer | ArrayBufferView,
+  salt: string | ArrayBuffer | ArrayBufferView,
+  iterations: number,
+  keylen: number,
+  digest: Algorithm | Lowercase<Algorithm> | number
+): Buffer
+
 export { CryptoError as errors }
 
 export * as webcrypto from './web'
