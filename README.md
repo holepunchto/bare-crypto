@@ -46,7 +46,7 @@ Fill a buffer with cryptographically secure random bytes. The callback signature
 
 Derive a key from a password and salt using the specified digest algorithm and number of iterations.
 
-#### `pbkdf2(password, salt, iterations, keylen, digest[, callback])`
+#### `pbkdf2(password, salt, iterations, keylen, digest, callback)`
 
 Derive a key from a password and salt using the specified digest algorithm and number of iterations. The callback signature is `callback(err, buffer)`.
 
