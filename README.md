@@ -30,7 +30,7 @@ Create a new `Hash` instance with the specified algorithm and options. The optio
 
 Generate cryptographically secure random bytes.
 
-#### `randomBytes(size[, callback])`
+#### `randomBytes(size, callback)`
 
 Generate cryptographically secure random bytes. The callback signature is `callback(err, buffer)`.
 
@@ -38,9 +38,13 @@ Generate cryptographically secure random bytes. The callback signature is `callb
 
 Fill a buffer with cryptographically secure random bytes.
 
-#### `randomFill(buffer[, offset][, size][, callback])`
+#### `randomFill(buffer[, offset][, size], callback)`
 
 Fill a buffer with cryptographically secure random bytes. The callback signature is `callback(err, buffer)`
+
+#### `const buffer = pbkdf2(password, salt, iterations, keylen, digest)`
+
+Derive a key from a password and salt using the specified digest algorithm and number of iterations.
 
 #### `pbkdf2(password, salt, iterations, keylen, digest[, callback])`
 
