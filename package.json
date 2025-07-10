@@ -3,14 +3,18 @@
   "version": "1.6.0",
   "description": "Cryptographic primitives for JavaScript",
   "exports": {
+    "./package": "./package.json",
     ".": {
       "types": "./index.d.ts",
       "default": "./index.js"
     },
-    "./package": "./package.json",
     "./web": {
       "types": "./web.d.ts",
       "default": "./web.js"
+    },
+    "./global": {
+      "types": "./global.d.ts",
+      "default": "./global.js"
     },
     "./constants": "./lib/constants.js",
     "./errors": "./lib/errors.js"
