@@ -3,6 +3,7 @@
 #include <js.h>
 #include <openssl/digest.h>
 #include <openssl/evp.h>
+#include <openssl/hmac.h>
 #include <openssl/rand.h>
 #include <stddef.h>
 
@@ -17,6 +18,10 @@ enum {
 typedef struct {
   EVP_MD_CTX context;
 } bare_crypto_hash_t;
+
+typedef struct {
+  HMAC_CTX context;
+} bare_crypto_hmac_t;
 
 static inline const EVP_MD *
 bare_crypto__to_algorithm(js_env_t *env, int type) {
@@ -141,6 +146,116 @@ bare_crypto_hash_final(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
+bare_crypto_hmac_init(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 4;
+  js_value_t *argv[4];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 4);
+
+  uint32_t type;
+  err = js_get_value_uint32(env, argv[0], &type);
+  assert(err == 0);
+
+  char *key;
+  err = js_get_arraybuffer_info(env, argv[1], (void **) &key, NULL);
+  assert(err == 0);
+
+  int64_t offset;
+  err = js_get_value_int64(env, argv[2], &offset);
+  assert(err == 0);
+
+  int64_t len;
+  err = js_get_value_int64(env, argv[3], &len);
+  assert(err == 0);
+
+  js_value_t *handle;
+
+  bare_crypto_hmac_t *hmac;
+  err = js_create_arraybuffer(env, sizeof(bare_crypto_hmac_t), (void **) &hmac, &handle);
+  assert(err == 0);
+
+  const EVP_MD *algorithm = bare_crypto__to_algorithm(env, type);
+
+  if (algorithm == NULL) return NULL;
+
+  HMAC_CTX_init(&hmac->context);
+
+  err = HMAC_Init_ex(&hmac->context, &key[offset], len, algorithm, NULL);
+  assert(err == 1);
+
+  return handle;
+}
+
+static js_value_t *
+bare_crypto_hmac_update(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 4;
+  js_value_t *argv[4];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 4);
+
+  bare_crypto_hmac_t *hmac;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &hmac, NULL);
+  assert(err == 0);
+
+  void *data;
+  err = js_get_arraybuffer_info(env, argv[1], &data, NULL);
+  assert(err == 0);
+
+  int64_t offset;
+  err = js_get_value_int64(env, argv[2], &offset);
+  assert(err == 0);
+
+  int64_t len;
+  err = js_get_value_int64(env, argv[3], &len);
+  assert(err == 0);
+
+  err = HMAC_Update(&hmac->context, &data[offset], len);
+  assert(err == 1);
+
+  return NULL;
+}
+
+static js_value_t *
+bare_crypto_hmac_final(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  bare_crypto_hmac_t *hmac;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &hmac, NULL);
+  assert(err == 0);
+
+  js_value_t *result;
+
+  size_t len = HMAC_size(&hmac->context);
+
+  uint8_t *digest;
+  err = js_create_arraybuffer(env, len, (void **) &digest, &result);
+  assert(err == 0);
+
+  err = HMAC_Final(&hmac->context, digest, NULL);
+  assert(err == 1);
+
+  return result;
+}
+
+static js_value_t *
 bare_crypto_random_fill(js_env_t *env, js_callback_info_t *info) {
   int err;
 
@@ -250,6 +365,10 @@ bare_crypto_exports(js_env_t *env, js_value_t *exports) {
   V("hashInit", bare_crypto_hash_init)
   V("hashUpdate", bare_crypto_hash_update)
   V("hashFinal", bare_crypto_hash_final)
+
+  V("hmacInit", bare_crypto_hmac_init)
+  V("hmacUpdate", bare_crypto_hmac_update)
+  V("hmacFinal", bare_crypto_hmac_final)
 
   V("randomFill", bare_crypto_random_fill)
 

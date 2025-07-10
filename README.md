@@ -26,6 +26,10 @@ console.log(digest)
 
 Create a new `Hash` instance with the specified algorithm and options. The options are passed to [`new Transform()`](https://github.com/mafintosh/streamxts--new-streamtransformoptions).
 
+#### `const hmac = createHmac(algorithm, key[, options])`
+
+Create a new `Hmac` instance with the specified algorithm, key, and options. The options are passed to [`new Transform()`](https://github.com/mafintosh/streamxts--new-streamtransformoptions).
+
 #### `const buffer = randomBytes(size)`
 
 Generate cryptographically secure random bytes.

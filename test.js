@@ -8,6 +8,13 @@ test('hash sha1', (t) => {
   )
 })
 
+test('hmac sha1', (t) => {
+  t.is(
+    crypto.createHmac('sha1', 'secret key').update('foo bar').digest('hex'),
+    '53497cb818cd33297778b3437cf20890eab27ae2'
+  )
+})
+
 test('random bytes', (t) => {
   t.is(crypto.randomBytes(0).byteLength, 0)
   t.is(crypto.randomBytes(2).byteLength, 2)
