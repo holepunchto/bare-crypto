@@ -24,6 +24,8 @@
     "index.d.ts",
     "web.js",
     "web.d.ts",
+    "global.js",
+    "global.d.ts",
     "binding.c",
     "binding.js",
     "CMakeLists.txt",
