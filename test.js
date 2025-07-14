@@ -222,11 +222,10 @@ test('pbkdf2', (t) => {
 })
 
 test('generateKey', async (t) => {
-  const key = await crypto.webcrypto.subtle.generateKey({
-    name: 'HMAC',
-    hash: 'SHA-256',
-    length: 256
-  })
+  const key = await crypto.webcrypto.subtle.generateKey(
+    { name: 'HMAC', hash: 'SHA-256', length: 256 },
+    true
+  )
 
   t.test('generateKey', (t) => {
     t.is(key.type, 'secret')
@@ -235,5 +234,17 @@ test('generateKey', async (t) => {
       length: 256,
       hash: { name: 'SHA-256' }
     })
+    t.is(key.extractable, true)
   })
+})
+
+test('exportKey', async (t) => {
+  const key = await crypto.webcrypto.subtle.generateKey(
+    { name: 'HMAC', hash: 'SHA-256', length: 256 },
+    true
+  )
+
+  const exportedKey = await crypto.webcrypto.subtle.exportKey('raw', key)
+
+  t.is(exportedKey.byteLength, 32)
 })
