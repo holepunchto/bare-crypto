@@ -220,3 +220,20 @@ test('pbkdf2', (t) => {
     '3745e482c6e0ade35da10139e797157f4a5da669dad7d5da88ef87e47471cc47ed941c7ad618e827304f083f8707f12b7cfdd5f489b782f10cc269e3c08d59ae'
   )
 })
+
+test('generateKey', async (t) => {
+  const key = await crypto.webcrypto.subtle.generateKey({
+    name: 'HMAC',
+    hash: 'SHA-256',
+    length: 256
+  })
+
+  t.test('generateKey', (t) => {
+    t.is(key.type, 'secret')
+    t.alike(key.algorithm, {
+      name: 'HMAC',
+      length: 256,
+      hash: { name: 'SHA-256' }
+    })
+  })
+})
