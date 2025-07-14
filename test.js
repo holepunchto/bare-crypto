@@ -238,7 +238,7 @@ test('generateKey', async (t) => {
   })
 })
 
-test('exportKey', async (t) => {
+test('exportKey + importKey', async (t) => {
   const key = await crypto.webcrypto.subtle.generateKey(
     { name: 'HMAC', hash: 'SHA-256', length: 256 },
     true
@@ -247,4 +247,20 @@ test('exportKey', async (t) => {
   const exportedKey = await crypto.webcrypto.subtle.exportKey('raw', key)
 
   t.is(exportedKey.byteLength, 32)
+
+  const importedKey = await crypto.webcrypto.subtle.importKey(
+    'raw',
+    exportedKey,
+    { name: 'HMAC', hash: 'SHA-256' },
+    true
+  )
+
+  t.is(importedKey.type, 'secret')
+
+  t.alike(importedKey.algorithm, {
+    name: 'HMAC',
+    length: 256,
+    hash: { name: 'SHA-256' }
+  })
+  t.is(importedKey.extractable, true)
 })
