@@ -10,7 +10,7 @@ exports.getRandomValues = function getRandomValues(array) {
 exports.SubtleCrypto = class SubtleCrypto {
   // https://w3c.github.io/webcrypto/#SubtleCrypto-method-generateKey
   // https://w3c.github.io/webcrypto/#hmac-operations-generate-key
-  async generateKey(algorithm, extractable) {
+  async generateKey(algorithm, extractable, usages) {
     let { name, length } = algorithm
     const { hash } = algorithm
 
@@ -18,6 +18,16 @@ exports.SubtleCrypto = class SubtleCrypto {
 
     if (name !== 'HMAC') {
       throw errors.UNSUPPORTED_ALGORITHM(`Unsupported algorithm name '${name}'`)
+    }
+
+    if (usages.length === 0) {
+      throw new SyntaxError('Usages argument cannot be empty')
+    }
+
+    for (const usage of usages) {
+      if (usage !== 'sign' && usage !== 'verify') {
+        throw new SyntaxError(`Invalid usage ${usage}`)
+      }
     }
 
     if (length === undefined) {
@@ -32,13 +42,14 @@ exports.SubtleCrypto = class SubtleCrypto {
     return new exports.CryptoKey(
       key,
       { name, length, hash: { name: hash } },
-      extractable
+      extractable,
+      usages
     )
   }
 
   // https://w3c.github.io/webcrypto/#SubtleCrypto-method-importKey
   // https://w3c.github.io/webcrypto/#hmac-operations-import-key
-  async importKey(format, keyData, algorithm, extractable) {
+  async importKey(format, keyData, algorithm, extractable, usages) {
     if (format !== 'raw') {
       throw errors.UNSUPPORTED_FORMAT(`Unsupported format '${format}'`)
     }
@@ -49,6 +60,10 @@ exports.SubtleCrypto = class SubtleCrypto {
 
     if (name !== 'HMAC') {
       throw errors.UNSUPPORTED_ALGORITHM(`Unsupported algorithm name '${name}'`)
+    }
+
+    if (usages.length === 0) {
+      throw new SyntaxError('keyUsages cannot be empty')
     }
 
     const length = keyData.byteLength * 8
@@ -62,7 +77,8 @@ exports.SubtleCrypto = class SubtleCrypto {
     return new exports.CryptoKey(
       keyData,
       { name, length, hash: { name: hash } },
-      extractable
+      extractable,
+      usages
     )
   }
 
@@ -83,17 +99,37 @@ exports.SubtleCrypto = class SubtleCrypto {
       throw errors.UNSUPPORTED_FORMAT(`Unsupported format '${format}'`)
     }
 
-    return key._key.buffer
+    return key._key
+  }
+
+  // https://w3c.github.io/webcrypto/#SubtleCrypto-method-sign
+  // https://w3c.github.io/webcrypto/#hmac-operations-sign
+  async sign(algorithm, key, data) {
+    // TODO: algorithm can be a string
+    if (algorithm.name.toUpperCase() !== 'HMAC') {
+      throw errors.UNSUPPORTED_ALGORITHM(
+        `Unsupported algorithm name '${algorithm.name}'`
+      )
+    }
+
+    if (!key.usages.includes('sign')) {
+      throw errors.INVALID_ACCESS('Unable to use this key to sign')
+    }
+
+    const hash = algorithm.hash.replace('-', '')
+
+    return crypto.createHmac(hash, key._key).update(data).digest()
   }
 }
 
 // https://w3c.github.io/webcrypto/#cryptokey-interface
 exports.CryptoKey = class CryptoKey {
-  constructor(key, algorithm, extractable) {
-    this._key = key // must be a non-enumerable property
+  constructor(key, algorithm, extractable, usages) {
+    this._key = key // TODO: that must be a more private, non-enumerable property
     this.type = 'secret'
     this.algorithm = algorithm
     this.extractable = extractable
+    this.usages = usages
   }
 }
 

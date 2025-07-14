@@ -224,7 +224,8 @@ test('pbkdf2', (t) => {
 test('generateKey', async (t) => {
   const key = await crypto.webcrypto.subtle.generateKey(
     { name: 'HMAC', hash: 'SHA-256', length: 256 },
-    true
+    true,
+    ['sign']
   )
 
   t.test('generateKey', (t) => {
@@ -241,7 +242,8 @@ test('generateKey', async (t) => {
 test('exportKey + importKey', async (t) => {
   const key = await crypto.webcrypto.subtle.generateKey(
     { name: 'HMAC', hash: 'SHA-256', length: 256 },
-    true
+    true,
+    ['sign']
   )
 
   const exportedKey = await crypto.webcrypto.subtle.exportKey('raw', key)
@@ -252,7 +254,8 @@ test('exportKey + importKey', async (t) => {
     'raw',
     exportedKey,
     { name: 'HMAC', hash: 'SHA-256' },
-    true
+    true,
+    ['sign']
   )
 
   t.is(importedKey.type, 'secret')
@@ -263,4 +266,22 @@ test('exportKey + importKey', async (t) => {
     hash: { name: 'SHA-256' }
   })
   t.is(importedKey.extractable, true)
+})
+
+test('sign', async (t) => {
+  const key = await crypto.webcrypto.subtle.generateKey(
+    { name: 'HMAC', hash: 'SHA-256', length: 256 },
+    true,
+    ['sign']
+  )
+
+  const data = Buffer.from('30 RS 6000 SP thin')
+
+  const signature = await crypto.webcrypto.subtle.sign(
+    { name: 'HMAC', hash: 'SHA-256', length: 256 },
+    key,
+    data
+  )
+
+  t.is(signature.byteLength, 32)
 })
