@@ -1,8 +1,6 @@
 const crypto = require('.')
 const errors = require('./lib/errors')
 
-const keySymbol = Symbol('key')
-
 // https://w3c.github.io/webcrypto/#Crypto-method-getRandomValues
 exports.getRandomValues = function getRandomValues(array) {
   return crypto.randomFillSync(array)
@@ -103,7 +101,7 @@ exports.SubtleCrypto = class SubtleCrypto {
       throw errors.UNSUPPORTED_FORMAT(`Unsupported format '${format}'`)
     }
 
-    return key[keySymbol]
+    return key._key
   }
 
   // https://w3c.github.io/webcrypto/#SubtleCrypto-method-sign
@@ -128,7 +126,7 @@ exports.SubtleCrypto = class SubtleCrypto {
 
     data = Buffer.from(data) // clone
 
-    return crypto.createHmac(hash, key[keySymbol]).update(data).digest()
+    return crypto.createHmac(hash, key._key).update(data).digest()
   }
 
   // https://w3c.github.io/webcrypto/#SubtleCrypto-method-verify
@@ -159,7 +157,7 @@ exports.SubtleCrypto = class SubtleCrypto {
 // https://w3c.github.io/webcrypto/#cryptokey-interface
 exports.CryptoKey = class CryptoKey {
   constructor(key, algorithm, extractable, usages) {
-    this[keySymbol] = key
+    this._key = key
 
     this.type = 'secret'
     this.algorithm = algorithm
