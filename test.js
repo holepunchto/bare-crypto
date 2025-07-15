@@ -268,14 +268,14 @@ test('exportKey + importKey', async (t) => {
   t.is(importedKey.extractable, true)
 })
 
-test('sign', async (t) => {
+test('sign + verify', async (t) => {
   const key = await crypto.webcrypto.subtle.generateKey(
     { name: 'HMAC', hash: 'SHA-256', length: 256 },
     true,
-    ['sign']
+    ['sign', 'verify']
   )
 
-  const data = Buffer.from('30 RS 6000 SP thin')
+  const data = Buffer.from('hello world')
 
   const signature = await crypto.webcrypto.subtle.sign(
     { name: 'HMAC', hash: 'SHA-256', length: 256 },
@@ -284,4 +284,28 @@ test('sign', async (t) => {
   )
 
   t.is(signature.byteLength, 32)
+
+  let verified = await crypto.webcrypto.subtle.verify(
+    { name: 'HMAC', hash: 'SHA-256', length: 256 },
+    key,
+    signature,
+    data
+  )
+
+  t.is(verified, true)
+
+  const otherSignature = await crypto.webcrypto.subtle.sign(
+    { name: 'HMAC', hash: 'SHA-256', length: 256 },
+    key,
+    Buffer.from('goodbye world')
+  )
+
+  verified = await crypto.webcrypto.subtle.verify(
+    { name: 'HMAC', hash: 'SHA-256', length: 256 },
+    key,
+    otherSignature,
+    data
+  )
+
+  t.is(verified, false)
 })

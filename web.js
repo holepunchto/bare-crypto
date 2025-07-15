@@ -104,12 +104,16 @@ exports.SubtleCrypto = class SubtleCrypto {
 
   // https://w3c.github.io/webcrypto/#SubtleCrypto-method-sign
   // https://w3c.github.io/webcrypto/#hmac-operations-sign
+  // TODO: algorithm can be a string
   async sign(algorithm, key, data) {
-    // TODO: algorithm can be a string
     if (algorithm.name.toUpperCase() !== 'HMAC') {
       throw errors.UNSUPPORTED_ALGORITHM(
         `Unsupported algorithm name '${algorithm.name}'`
       )
+    }
+
+    if (algorithm.name.toUpperCase() !== key.algorithm.name) {
+      throw errors.INVALID_ACCESS('Divergent algorithms')
     }
 
     if (!key.usages.includes('sign')) {
@@ -119,6 +123,27 @@ exports.SubtleCrypto = class SubtleCrypto {
     const hash = algorithm.hash.replace('-', '')
 
     return crypto.createHmac(hash, key._key).update(data).digest()
+  }
+
+  // https://w3c.github.io/webcrypto/#SubtleCrypto-method-verify
+  // https://w3c.github.io/webcrypto/#hmac-operations-verify
+  // TODO: algorithm can be a string
+  async verify(algorithm, key, signature, data) {
+    if (algorithm.name.toUpperCase() !== 'HMAC') {
+      throw errors.UNSUPPORTED_ALGORITHM(
+        `Unsupported algorithm name '${algorithm.name}'`
+      )
+    }
+
+    if (algorithm.name.toUpperCase() !== key.algorithm.name) {
+      throw errors.INVALID_ACCESS('Divergent algorithms')
+    }
+
+    if (!key.usages.includes('verify')) {
+      throw errors.INVALID_ACCESS('Unable to use this key to verify')
+    }
+
+    return signature.equals(await this.sign(algorithm, key, data))
   }
 }
 
