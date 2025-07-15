@@ -1,6 +1,8 @@
 const crypto = require('.')
 const errors = require('./lib/errors')
 
+const keySymbol = Symbol('key')
+
 // https://w3c.github.io/webcrypto/#Crypto-method-getRandomValues
 exports.getRandomValues = function getRandomValues(array) {
   return crypto.randomFillSync(array)
@@ -74,6 +76,8 @@ exports.SubtleCrypto = class SubtleCrypto {
 
     const { hash } = algorithm
 
+    keyData = Buffer.from(keyData) // clone
+
     return new exports.CryptoKey(
       keyData,
       { name, length, hash: { name: hash } },
@@ -99,7 +103,7 @@ exports.SubtleCrypto = class SubtleCrypto {
       throw errors.UNSUPPORTED_FORMAT(`Unsupported format '${format}'`)
     }
 
-    return key._key
+    return key[keySymbol]
   }
 
   // https://w3c.github.io/webcrypto/#SubtleCrypto-method-sign
@@ -122,7 +126,9 @@ exports.SubtleCrypto = class SubtleCrypto {
 
     const hash = algorithm.hash.replace('-', '')
 
-    return crypto.createHmac(hash, key._key).update(data).digest()
+    data = Buffer.from(data) // clone
+
+    return crypto.createHmac(hash, key[keySymbol]).update(data).digest()
   }
 
   // https://w3c.github.io/webcrypto/#SubtleCrypto-method-verify
@@ -143,6 +149,9 @@ exports.SubtleCrypto = class SubtleCrypto {
       throw errors.INVALID_ACCESS('Unable to use this key to verify')
     }
 
+    signature = Buffer.from(signature) // clone
+    data = Buffer.from(data)
+
     return signature.equals(await this.sign(algorithm, key, data))
   }
 }
@@ -150,7 +159,8 @@ exports.SubtleCrypto = class SubtleCrypto {
 // https://w3c.github.io/webcrypto/#cryptokey-interface
 exports.CryptoKey = class CryptoKey {
   constructor(key, algorithm, extractable, usages) {
-    this._key = key // TODO: that must be a more private, non-enumerable property
+    this[keySymbol] = key
+
     this.type = 'secret'
     this.algorithm = algorithm
     this.extractable = extractable
