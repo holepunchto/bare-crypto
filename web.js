@@ -106,8 +106,9 @@ exports.SubtleCrypto = class SubtleCrypto {
 
   // https://w3c.github.io/webcrypto/#SubtleCrypto-method-sign
   // https://w3c.github.io/webcrypto/#hmac-operations-sign
-  // TODO: algorithm can be a string
   async sign(algorithm, key, data) {
+    if (typeof algorithm === 'string') algorithm = { name: algorithm }
+
     if (algorithm.name.toUpperCase() !== 'HMAC') {
       throw errors.UNSUPPORTED_ALGORITHM(
         `Unsupported algorithm name '${algorithm.name}'`
@@ -122,7 +123,7 @@ exports.SubtleCrypto = class SubtleCrypto {
       throw errors.INVALID_ACCESS('Unable to use this key to sign')
     }
 
-    const hash = algorithm.hash.replace('-', '')
+    const hash = key.algorithm.hash.name.replace('-', '')
 
     data = Buffer.from(data) // clone
 
@@ -131,8 +132,9 @@ exports.SubtleCrypto = class SubtleCrypto {
 
   // https://w3c.github.io/webcrypto/#SubtleCrypto-method-verify
   // https://w3c.github.io/webcrypto/#hmac-operations-verify
-  // TODO: algorithm can be a string
   async verify(algorithm, key, signature, data) {
+    if (typeof algorithm === 'string') algorithm = { name: algorithm }
+
     if (algorithm.name.toUpperCase() !== 'HMAC') {
       throw errors.UNSUPPORTED_ALGORITHM(
         `Unsupported algorithm name '${algorithm.name}'`

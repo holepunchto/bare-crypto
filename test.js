@@ -236,6 +236,7 @@ test('generateKey', async (t) => {
       hash: { name: 'SHA-256' }
     })
     t.is(key.extractable, true)
+    t.alike(key.usages, ['sign'])
   })
 })
 
@@ -277,16 +278,12 @@ test('sign + verify', async (t) => {
 
   const data = Buffer.from('hello world')
 
-  const signature = await crypto.webcrypto.subtle.sign(
-    { name: 'HMAC', hash: 'SHA-256', length: 256 },
-    key,
-    data
-  )
+  const signature = await crypto.webcrypto.subtle.sign('HMAC', key, data)
 
   t.is(signature.byteLength, 32)
 
   let verified = await crypto.webcrypto.subtle.verify(
-    { name: 'HMAC', hash: 'SHA-256', length: 256 },
+    'HMAC',
     key,
     signature,
     data
