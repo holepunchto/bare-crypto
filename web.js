@@ -30,10 +30,7 @@ exports.SubtleCrypto = class SubtleCrypto {
       }
     }
 
-    if (length === undefined) {
-      if (hash === 'SHA-1' || hash === 'SHA-256') length = 512
-      if (hash === 'SHA-512') length = 1024
-    }
+    if (!length) length = getKeyLength(algorithm)
 
     const key = crypto
       .createHmac(hash.replace('-', ''), crypto.randomBytes(length))
@@ -176,19 +173,22 @@ exports.SubtleCrypto = class SubtleCrypto {
     signature = Buffer.from(signature) // clone
     data = Buffer.from(data)
 
-    return signature.equals(await this.sign(algorithm, key, data))
+    const keyClone = structuredClone(key)
+    keyClone.usages = ['sign']
+
+    return signature.equals(await this.sign(algorithm, keyClone, data))
   }
 
   // https://w3c.github.io/webcrypto/#SubtleCrypto-method-deriveBits
   // https://w3c.github.io/webcrypto/#pbkdf2-operations-derive-bits
   async deriveBits(algorithm, key, length = null) {
-    if (algorithm.name !== 'PBKDF2') {
+    if (algorithm.name.toUpperCase() !== 'PBKDF2') {
       throw errors.UNSUPPORTED_ALGORITHM(
         `Unsupported algorithm name '${algorithm.name}'`
       )
     }
 
-    if (algorithm.name.toUpperCase() !== key.algorithm.name) {
+    if (algorithm.name.toUpperCase() !== key.algorithm.name.toUpperCase()) {
       throw errors.INVALID_ACCESS('Divergent algorithms')
     }
 
@@ -212,6 +212,32 @@ exports.SubtleCrypto = class SubtleCrypto {
 
     return buf.buffer
   }
+
+  // https://w3c.github.io/webcrypto/#SubtleCrypto-method-deriveKey
+  async deriveKey(algorithm, key, derivedKeyAlgorithm, extractable, keyUsages) {
+    if (!key.usages.includes('deriveKey')) {
+      throw errors.INVALID_ACCESS(
+        'Unable to use the provided key to derive key'
+      )
+    }
+
+    const keyClone = structuredClone(key)
+    keyClone.usages = ['deriveBits']
+
+    const derivedKey = await this.deriveBits(
+      algorithm,
+      keyClone,
+      getKeyLength(derivedKeyAlgorithm)
+    )
+
+    return this.importKey(
+      'raw',
+      derivedKey,
+      derivedKeyAlgorithm,
+      extractable,
+      keyUsages
+    )
+  }
 }
 
 // https://w3c.github.io/webcrypto/#cryptokey-interface
@@ -227,3 +253,26 @@ exports.CryptoKey = class CryptoKey {
 }
 
 exports.subtle = new exports.SubtleCrypto()
+
+function getKeyLength({ name, hash, length }) {
+  name = name.toUpperCase()
+
+  if (name === 'HMAC') {
+    // https://w3c.github.io/webcrypto/#hmac-operations-get-key-length
+    if (length === undefined) {
+      if (hash === 'SHA-1' || hash === 'SHA-256') return 512
+      if (hash === 'SHA-512') return 1024
+
+      throw errors.OPERATION_ERROR(`Invalid hash ${hash}`)
+    } else if (length > 0) {
+      return length
+    } else {
+      throw errors.OPERATION_ERROR(`Invalid length ${length}`)
+    }
+  } else if (name === 'PBKDF2') {
+    // https://w3c.github.io/webcrypto/#pbkdf2-operations-get-key-length
+    return null
+  } else {
+    throw errors.UNSUPPORTED_ALGORITHM(`Unsupported algorithm name '${name}'`)
+  }
+}
