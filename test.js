@@ -220,3 +220,183 @@ test('pbkdf2', (t) => {
     '3745e482c6e0ade35da10139e797157f4a5da669dad7d5da88ef87e47471cc47ed941c7ad618e827304f083f8707f12b7cfdd5f489b782f10cc269e3c08d59ae'
   )
 })
+
+test('generateKey', async (t) => {
+  const key = await crypto.webcrypto.subtle.generateKey(
+    { name: 'HMAC', hash: 'SHA-256', length: 256 },
+    true,
+    ['sign']
+  )
+
+  t.test('generateKey', (t) => {
+    t.is(key.type, 'secret')
+    t.is(key.extractable, true)
+    t.alike(key.algorithm, {
+      name: 'HMAC',
+      length: 256,
+      hash: { name: 'SHA-256' }
+    })
+    t.alike(key.usages, ['sign'])
+  })
+})
+
+test('HMAC - importKey + exportKey', async (t) => {
+  const key = await crypto.webcrypto.subtle.generateKey(
+    { name: 'HMAC', hash: 'SHA-256', length: 256 },
+    true,
+    ['sign']
+  )
+
+  const exportedKey = await crypto.webcrypto.subtle.exportKey('raw', key)
+
+  t.is(exportedKey.byteLength, 32)
+
+  const importedKey = await crypto.webcrypto.subtle.importKey(
+    'raw',
+    exportedKey,
+    { name: 'HMAC', hash: 'SHA-256' },
+    true,
+    ['sign']
+  )
+
+  t.is(importedKey.type, 'secret')
+  t.is(importedKey.extractable, true)
+  t.alike(importedKey.algorithm, {
+    name: 'HMAC',
+    length: 256,
+    hash: { name: 'SHA-256' }
+  })
+  t.alike(importedKey.usages, ['sign'])
+})
+
+test('PBKDF2 - importKey + exportKey', async (t) => {
+  const key = await crypto.webcrypto.subtle.importKey(
+    'raw',
+    Buffer.from('secret'),
+    'PBKDF2',
+    false,
+    ['deriveKey', 'deriveBits']
+  )
+
+  t.is(key.type, 'secret')
+  t.is(key.extractable, false)
+  t.alike(key.algorithm, { name: 'PBKDF2' })
+  t.alike(key.usages, ['deriveKey', 'deriveBits'])
+
+  await t.exception(
+    async () => crypto.webcrypto.subtle.exportKey('raw', key),
+    /INVALID_ACCESS/
+  )
+})
+
+test('sign + verify', async (t) => {
+  const key = await crypto.webcrypto.subtle.generateKey(
+    { name: 'HMAC', hash: 'SHA-256', length: 256 },
+    true,
+    ['sign', 'verify']
+  )
+
+  const data = Buffer.from('hello world')
+
+  const signature = await crypto.webcrypto.subtle.sign('HMAC', key, data)
+
+  t.is(signature.byteLength, 32)
+
+  let verified = await crypto.webcrypto.subtle.verify(
+    'HMAC',
+    key,
+    signature,
+    data
+  )
+
+  t.is(verified, true)
+})
+
+test('verify - different keys', async (t) => {
+  const signerKey = await crypto.webcrypto.subtle.generateKey(
+    { name: 'HMAC', hash: 'SHA-256', length: 256 },
+    true,
+    ['sign']
+  )
+
+  const verifierKey = await crypto.webcrypto.subtle.generateKey(
+    { name: 'HMAC', hash: 'SHA-256', length: 256 },
+    true,
+    ['verify']
+  )
+
+  const data = Buffer.from('hello world')
+
+  const signature = await crypto.webcrypto.subtle.sign('HMAC', signerKey, data)
+
+  const verified = await crypto.webcrypto.subtle.verify(
+    'HMAC',
+    verifierKey,
+    signature,
+    data
+  )
+
+  t.alike(verifierKey.usages, ['verify'])
+
+  t.is(verified, false)
+})
+
+test('deriveBits', async (t) => {
+  const key = await crypto.webcrypto.subtle.importKey(
+    'raw',
+    Buffer.from('secret'),
+    'PBKDF2',
+    false,
+    ['deriveBits']
+  )
+
+  const algorithm = {
+    name: 'PBKDF2',
+    hash: 'SHA-512',
+    salt: Buffer.from('salt'),
+    iterations: 1000
+  }
+
+  const bits = await crypto.webcrypto.subtle.deriveBits(algorithm, key, 256)
+
+  t.is(
+    Buffer.from(bits).toString('hex'),
+    'f76f72381b75f0deb1c339334a8c8974366cadbc6bf46460f978363de8d210db'
+  )
+})
+
+test('deriveKey', async (t) => {
+  const key = await crypto.webcrypto.subtle.importKey(
+    'raw',
+    Buffer.from('secret'),
+    'PBKDF2',
+    false,
+    ['deriveKey']
+  )
+
+  const algorithm = {
+    name: 'PBKDF2',
+    hash: 'SHA-512',
+    salt: Buffer.from('salt'),
+    iterations: 1000
+  }
+
+  const derivedKey = await crypto.webcrypto.subtle.deriveKey(
+    algorithm,
+    key,
+    { name: 'HMAC', hash: 'SHA-512' },
+    true,
+    ['sign']
+  )
+
+  t.alike(key.usages, ['deriveKey'])
+
+  t.is(derivedKey.type, 'secret')
+  t.is(derivedKey.extractable, true)
+  t.alike(derivedKey.algorithm, {
+    name: 'HMAC',
+    length: 1024,
+    hash: { name: 'SHA-512' }
+  })
+  t.alike(derivedKey.usages, ['sign'])
+})
