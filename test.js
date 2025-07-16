@@ -326,3 +326,29 @@ test('sign + verify', async (t) => {
 
   t.is(verified, false)
 })
+
+test('deriveBits', async (t) => {
+  const key = await crypto.webcrypto.subtle.importKey(
+    'raw',
+    Buffer.from('secret'),
+    'PBKDF2',
+    false,
+    ['deriveBits']
+  )
+
+  const bits = await crypto.webcrypto.subtle.deriveBits(
+    {
+      name: 'PBKDF2',
+      hash: 'SHA-512',
+      salt: Buffer.from('salt'),
+      iterations: 1000
+    },
+    key,
+    256
+  )
+
+  t.is(
+    Buffer.from(bits).toString('hex'),
+    'f76f72381b75f0deb1c339334a8c8974366cadbc6bf46460f978363de8d210db'
+  )
+})

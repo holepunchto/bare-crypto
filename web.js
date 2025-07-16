@@ -144,7 +144,7 @@ exports.SubtleCrypto = class SubtleCrypto {
     }
 
     if (!key.usages.includes('sign')) {
-      throw errors.INVALID_ACCESS('Unable to use this key to sign')
+      throw errors.INVALID_ACCESS('Unable to use the provided key to sign')
     }
 
     const hash = key.algorithm.hash.name.replace('-', '')
@@ -170,13 +170,47 @@ exports.SubtleCrypto = class SubtleCrypto {
     }
 
     if (!key.usages.includes('verify')) {
-      throw errors.INVALID_ACCESS('Unable to use this key to verify')
+      throw errors.INVALID_ACCESS('Unable to use the provided key to verify')
     }
 
     signature = Buffer.from(signature) // clone
     data = Buffer.from(data)
 
     return signature.equals(await this.sign(algorithm, key, data))
+  }
+
+  // https://w3c.github.io/webcrypto/#SubtleCrypto-method-deriveBits
+  // https://w3c.github.io/webcrypto/#pbkdf2-operations-derive-bits
+  async deriveBits(algorithm, key, length = null) {
+    if (algorithm.name !== 'PBKDF2') {
+      throw errors.UNSUPPORTED_ALGORITHM(
+        `Unsupported algorithm name '${algorithm.name}'`
+      )
+    }
+
+    if (algorithm.name.toUpperCase() !== key.algorithm.name) {
+      throw errors.INVALID_ACCESS('Divergent algorithms')
+    }
+
+    if (!key.usages.includes('deriveBits')) {
+      throw errors.INVALID_ACCESS(
+        'Unable to use the provided key to derive bits'
+      )
+    }
+
+    if (length === null || length % 8) {
+      throw errors.OPERATION_ERROR('Length must be multiple of 8')
+    }
+
+    const buf = crypto.pbkdf2(
+      key._key,
+      algorithm.salt,
+      algorithm.iterations,
+      length / 8,
+      algorithm.hash.replace('-', '')
+    )
+
+    return buf.buffer
   }
 }
 
