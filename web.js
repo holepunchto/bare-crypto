@@ -25,7 +25,7 @@ exports.SubtleCrypto = class SubtleCrypto {
     }
 
     for (const usage of usages) {
-      if (usage !== 'sign' && usage !== 'verify') {
+      if (!['sign', 'verify'].includes(usage)) {
         throw new SyntaxError(`Invalid usage ${usage}`)
       }
     }
@@ -48,49 +48,73 @@ exports.SubtleCrypto = class SubtleCrypto {
   }
 
   // https://w3c.github.io/webcrypto/#SubtleCrypto-method-importKey
-  // https://w3c.github.io/webcrypto/#hmac-operations-import-key
   async importKey(format, keyData, algorithm, extractable, usages) {
     if (format !== 'raw') {
       throw errors.UNSUPPORTED_FORMAT(`Unsupported format '${format}'`)
     }
 
-    let { name } = algorithm
+    let name = algorithm.name || algorithm
 
     name = name.toUpperCase()
 
-    if (name !== 'HMAC') {
+    if (!['HMAC', 'PBKDF2'].includes(name)) {
       throw errors.UNSUPPORTED_ALGORITHM(`Unsupported algorithm name '${name}'`)
     }
+
+    keyData = Buffer.from(keyData) // clone
 
     if (usages.length === 0) {
       throw new SyntaxError('keyUsages cannot be empty')
     }
 
-    const length = keyData.byteLength * 8
+    // https://w3c.github.io/webcrypto/#hmac-operations-import-key
+    if (name === 'HMAC') {
+      for (const usage of usages) {
+        if (!['sign', 'verify'].includes(usage)) {
+          throw new SyntaxError(`Invalid usage ${usage}`)
+        }
+      }
 
-    if (length === 0) {
-      throw errors.UNSUPPORTED_FORMAT('Key length cannot be zero')
+      const length = keyData.byteLength * 8
+
+      if (length === 0) {
+        throw errors.UNSUPPORTED_FORMAT('Key length cannot be zero')
+      }
+
+      const { hash } = algorithm
+
+      return new exports.CryptoKey(
+        keyData,
+        { name, length, hash: { name: hash } },
+        extractable,
+        usages
+      )
     }
+    // https://w3c.github.io/webcrypto/#pbkdf2-operations-import-key
+    else {
+      for (const usage of usages) {
+        if (!['deriveKey', 'deriveBits'].includes(usage)) {
+          throw new SyntaxError(`Invalid usage ${usage}`)
+        }
+      }
 
-    const { hash } = algorithm
+      if (extractable !== false) {
+        throw new SyntaxError('Extractable must be false')
+      }
 
-    keyData = Buffer.from(keyData) // clone
-
-    return new exports.CryptoKey(
-      keyData,
-      { name, length, hash: { name: hash } },
-      extractable,
-      usages
-    )
+      return new exports.CryptoKey(keyData, { name }, extractable, usages)
+    }
   }
 
   // https://w3c.github.io/webcrypto/#SubtleCrypto-method-exportKey
   // https://w3c.github.io/webcrypto/#hmac-operations-export-key
   async exportKey(format, key) {
-    const { name, extractable } = key.algorithm
+    const { algorithm, extractable } = key
 
-    if (name !== 'HMAC') {
-      throw errors.UNSUPPORTED_ALGORITHM(`Unsupported algorithm name '${name}'`)
+    if (!['HMAC', 'PBKDF2'].includes(algorithm.name)) {
+      throw errors.UNSUPPORTED_ALGORITHM(
+        `Unsupported algorithm name '${algorithm.name}'`
+      )
     }
 
     if (extractable === false) {

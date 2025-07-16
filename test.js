@@ -230,17 +230,17 @@ test('generateKey', async (t) => {
 
   t.test('generateKey', (t) => {
     t.is(key.type, 'secret')
+    t.is(key.extractable, true)
     t.alike(key.algorithm, {
       name: 'HMAC',
       length: 256,
       hash: { name: 'SHA-256' }
     })
-    t.is(key.extractable, true)
     t.alike(key.usages, ['sign'])
   })
 })
 
-test('exportKey + importKey', async (t) => {
+test('HMAC - importKey + exportKey', async (t) => {
   const key = await crypto.webcrypto.subtle.generateKey(
     { name: 'HMAC', hash: 'SHA-256', length: 256 },
     true,
@@ -260,13 +260,33 @@ test('exportKey + importKey', async (t) => {
   )
 
   t.is(importedKey.type, 'secret')
-
+  t.is(importedKey.extractable, true)
   t.alike(importedKey.algorithm, {
     name: 'HMAC',
     length: 256,
     hash: { name: 'SHA-256' }
   })
-  t.is(importedKey.extractable, true)
+  t.alike(importedKey.usages, ['sign'])
+})
+
+test('PBKDF2 - importKey + exportKey', async (t) => {
+  const key = await crypto.webcrypto.subtle.importKey(
+    'raw',
+    Buffer.from('secret'),
+    'PBKDF2',
+    false,
+    ['deriveKey', 'deriveBits']
+  )
+
+  t.is(key.type, 'secret')
+  t.is(key.extractable, false)
+  t.alike(key.algorithm, { name: 'PBKDF2' })
+  t.alike(key.usages, ['deriveKey', 'deriveBits'])
+
+  await t.exception(
+    async () => crypto.webcrypto.subtle.exportKey('raw', key),
+    /INVALID_ACCESS/
+  )
 })
 
 test('sign + verify', async (t) => {
