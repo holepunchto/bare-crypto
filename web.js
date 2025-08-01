@@ -25,7 +25,7 @@ exports.SubtleCrypto = class SubtleCrypto {
     }
 
     for (const usage of usages) {
-      if (!['sign', 'verify'].includes(usage)) {
+      if (usage !== 'sign' && usage !== 'verify') {
         throw new SyntaxError(`Invalid usage ${usage}`)
       }
     }
@@ -33,7 +33,7 @@ exports.SubtleCrypto = class SubtleCrypto {
     if (!length) length = getKeyLength(algorithm)
 
     const key = crypto
-      .createHmac(hash.replace('-', ''), crypto.randomBytes(length))
+      .createHmac(fromWebCryptoBareCrypto(hash), crypto.randomBytes(length))
       .digest()
 
     return new exports.CryptoKey(
@@ -54,7 +54,7 @@ exports.SubtleCrypto = class SubtleCrypto {
 
     name = name.toUpperCase()
 
-    if (!['HMAC', 'PBKDF2'].includes(name)) {
+    if (name !== 'HMAC' && name !== 'PBKDF2') {
       throw errors.UNSUPPORTED_ALGORITHM(`Unsupported algorithm name '${name}'`)
     }
 
@@ -67,7 +67,7 @@ exports.SubtleCrypto = class SubtleCrypto {
     // https://w3c.github.io/webcrypto/#hmac-operations-import-key
     if (name === 'HMAC') {
       for (const usage of usages) {
-        if (!['sign', 'verify'].includes(usage)) {
+        if (usage !== 'sign' && usage !== 'verify') {
           throw new SyntaxError(`Invalid usage ${usage}`)
         }
       }
@@ -90,7 +90,7 @@ exports.SubtleCrypto = class SubtleCrypto {
     // https://w3c.github.io/webcrypto/#pbkdf2-operations-import-key
     else {
       for (const usage of usages) {
-        if (!['deriveKey', 'deriveBits'].includes(usage)) {
+        if (usage !== 'deriveKey' && usage !== 'deriveBits') {
           throw new SyntaxError(`Invalid usage ${usage}`)
         }
       }
@@ -108,7 +108,7 @@ exports.SubtleCrypto = class SubtleCrypto {
   async exportKey(format, key) {
     const { algorithm, extractable } = key
 
-    if (!['HMAC', 'PBKDF2'].includes(algorithm.name)) {
+    if (algorithm.name !== 'HMAC' && algorithm.name !== 'PBKDF2') {
       throw errors.UNSUPPORTED_ALGORITHM(
         `Unsupported algorithm name '${algorithm.name}'`
       )
@@ -144,7 +144,7 @@ exports.SubtleCrypto = class SubtleCrypto {
       throw errors.INVALID_ACCESS('Unable to use the provided key to sign')
     }
 
-    const hash = key.algorithm.hash.name.replace('-', '')
+    const hash = fromWebCryptoBareCrypto(key.algorithm.hash.name)
 
     data = Buffer.from(data) // clone
 
@@ -207,7 +207,7 @@ exports.SubtleCrypto = class SubtleCrypto {
       algorithm.salt,
       algorithm.iterations,
       length / 8,
-      algorithm.hash.replace('-', '')
+      fromWebCryptoBareCrypto(algorithm.hash)
     )
 
     return buf.buffer
@@ -275,4 +275,12 @@ function getKeyLength({ name, hash, length }) {
   } else {
     throw errors.UNSUPPORTED_ALGORITHM(`Unsupported algorithm name '${name}'`)
   }
+}
+
+function fromWebCryptoBareCrypto(name) {
+  if (name === 'SHA-1') return 'SHA1'
+  if (name === 'SHA-256') return 'SHA256'
+  if (name === 'SHA-512') return 'SHA512'
+
+  return name
 }
