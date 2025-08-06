@@ -255,22 +255,47 @@ test('pbkdf2', (t) => {
   )
 })
 
-test('generateKey', async (t) => {
+// Web Crypto
+
+test('HMAC - generateKey', async (t) => {
   const key = await crypto.webcrypto.subtle.generateKey(
     { name: 'HMAC', hash: 'SHA-256', length: 256 },
     true,
     ['sign']
   )
 
-  t.test('generateKey', (t) => {
-    t.is(key.type, 'secret')
-    t.is(key.extractable, true)
-    t.alike(key.algorithm, {
-      name: 'HMAC',
-      length: 256,
-      hash: { name: 'SHA-256' }
-    })
-    t.alike(key.usages, ['sign'])
+  t.is(key.type, 'secret')
+  t.is(key.extractable, true)
+  t.alike(key.algorithm, {
+    name: 'HMAC',
+    length: 256,
+    hash: { name: 'SHA-256' }
+  })
+  t.alike(key.usages, ['sign'])
+})
+
+// https://w3c.github.io/webcrypto/#ed25519-operations-generate-key
+test('ED25519 - generateKey', async (t) => {
+  const key = await crypto.webcrypto.subtle.generateKey(
+    { name: 'ED25519' },
+    false,
+    ['sign', 'verify']
+  )
+
+  const { privateKey, publicKey } = key
+
+  t.test('privateKey', (t) => {
+    t.is(privateKey.type, 'private')
+    t.is(privateKey.extractable, false)
+    t.alike(privateKey.algorithm, { name: 'Ed25519' })
+    t.alike(privateKey.usages, ['sign'])
+  })
+
+  t.test('publicKey', (t) => {
+    t.is(publicKey.type, 'public')
+    t.is(publicKey.extractable, true)
+    t.alike(publicKey.algorithm, { name: 'Ed25519' })
+    t.alike(publicKey.usages, ['verify'])
   })
 })
 
