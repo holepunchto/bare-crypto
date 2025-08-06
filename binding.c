@@ -28,10 +28,10 @@ enum {
   bare_crypto_aes_256_ofb = 8,
 
   // Authenticated ciphers
-  bare_crypto_aes_128_gcm = 10,
-  bare_crypto_aes_256_gcm = 11,
-  bare_crypto_chacha20_poly1305 = 12,
-  bare_crypto_xchacha20_poly1305 = 13,
+  bare_crypto_aes_128_gcm = 9,
+  bare_crypto_aes_256_gcm = 10,
+  bare_crypto_chacha20_poly1305 = 11,
+  bare_crypto_xchacha20_poly1305 = 12,
 };
 
 typedef struct {
