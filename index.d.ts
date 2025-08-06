@@ -1,9 +1,9 @@
 import { Transform, TransformOptions } from 'bare-stream'
 import Buffer, { BufferEncoding } from 'bare-buffer'
 
-type Algorithm = 'MD5' | 'SHA1' | 'SHA256' | 'SHA512' | 'BLAKE2B256'
+type HashAlgorithm = 'MD5' | 'SHA1' | 'SHA256' | 'SHA512' | 'BLAKE2B256'
 
-export const constants: { hash: Record<Algorithm, number> }
+export const constants: { hash: Record<HashAlgorithm, number> }
 
 declare class CryptoError extends Error {
   static UNSUPPORTED_DIGEST_METHOD(msg: string): CryptoError
@@ -11,7 +11,7 @@ declare class CryptoError extends Error {
 
 export class Hash extends Transform {
   constructor(
-    algorithm: Algorithm | Lowercase<Algorithm> | number,
+    algorithm: HashAlgorithm | Lowercase<HashAlgorithm> | number,
     opts?: TransformOptions<Hash>
   )
 
@@ -23,7 +23,7 @@ export class Hash extends Transform {
 }
 
 export function createHash(
-  algorithm: Algorithm | Lowercase<Algorithm> | number,
+  algorithm: HashAlgorithm | Lowercase<HashAlgorithm> | number,
   opts?: TransformOptions<Hash>
 ): Hash
 
@@ -69,7 +69,7 @@ export function pbkdf2(
   salt: string | ArrayBuffer | ArrayBufferView,
   iterations: number,
   keylen: number,
-  digest: Algorithm | Lowercase<Algorithm> | number
+  digest: HashAlgorithm | Lowercase<HashAlgorithm> | number
 ): Buffer
 
 export function pbkdf2(
@@ -77,7 +77,7 @@ export function pbkdf2(
   salt: string | ArrayBuffer | ArrayBufferView,
   iterations: number,
   keylen: number,
-  digest: Algorithm | Lowercase<Algorithm> | number,
+  digest: HashAlgorithm | Lowercase<HashAlgorithm> | number,
   callback: (err: Error | null, buffer: Buffer) => void
 ): void
 
@@ -86,7 +86,7 @@ export function pbkdf2Sync(
   salt: string | ArrayBuffer | ArrayBufferView,
   iterations: number,
   keylen: number,
-  digest: Algorithm | Lowercase<Algorithm> | number
+  digest: HashAlgorithm | Lowercase<HashAlgorithm> | number
 ): Buffer
 
 export { CryptoError as errors }
