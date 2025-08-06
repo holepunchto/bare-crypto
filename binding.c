@@ -503,7 +503,11 @@ bare_crypto_cipher_update(js_env_t *env, js_callback_info_t *info) {
 
   int written;
   err = EVP_CipherUpdate(&cipher->context, out, &written, &data[offset], len);
-  assert(err == 1);
+
+  if (err != 1) {
+    err = js_throw_error(env, NULL, "Cipher update failed");
+    assert(err == 0);
+  }
 
   js_value_t *result;
   err = js_create_int32(env, written, &result);
@@ -534,9 +538,13 @@ bare_crypto_cipher_final(js_env_t *env, js_callback_info_t *info) {
 
   int written;
   err = EVP_CipherFinal(&cipher->context, out, &written);
-  assert(err == 1);
 
   EVP_CIPHER_CTX_cleanup(&cipher->context);
+
+  if (err != 1) {
+    err = js_throw_error(env, NULL, "Cipher finalisation failed");
+    assert(err == 0);
+  }
 
   js_value_t *result;
   err = js_create_int32(env, written, &result);
