@@ -81,7 +81,6 @@ bare_crypto__to_cipher(js_env_t *env, int type) {
     V(aes_256_cbc)
     V(aes_256_ctr)
     V(aes_256_ofb)
-    V(aes_256_xts)
 #undef V
 
   default:
