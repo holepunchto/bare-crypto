@@ -507,6 +507,8 @@ bare_crypto_cipher_update(js_env_t *env, js_callback_info_t *info) {
   if (err != 1) {
     err = js_throw_error(env, NULL, "Cipher update failed");
     assert(err == 0);
+
+    return NULL;
   }
 
   js_value_t *result;
@@ -544,6 +546,8 @@ bare_crypto_cipher_final(js_env_t *env, js_callback_info_t *info) {
   if (err != 1) {
     err = js_throw_error(env, NULL, "Cipher finalisation failed");
     assert(err == 0);
+
+    return NULL;
   }
 
   js_value_t *result;
