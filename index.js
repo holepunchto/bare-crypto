@@ -1,27 +1,12 @@
 const { Transform } = require('bare-stream')
 const binding = require('./binding')
 const constants = (exports.constants = require('./lib/constants'))
-const errors = (exports.errors = require('./lib/errors'))
 
 exports.Hash = class CryptoHash extends Transform {
   constructor(algorithm, opts = {}) {
     super(opts)
 
-    if (typeof algorithm === 'string') {
-      if (algorithm in constants.hash) algorithm = constants.hash[algorithm]
-      else {
-        algorithm = algorithm.toUpperCase()
-
-        if (algorithm in constants.hash) algorithm = constants.hash[algorithm]
-        else {
-          throw errors.UNSUPPORTED_DIGEST_METHOD(
-            `Unsupported digest method '${algorithm}'`
-          )
-        }
-      }
-    }
-
-    this._handle = binding.hashInit(algorithm)
+    this._handle = binding.hashInit(constants.toHash(algorithm))
   }
 
   update(data, encoding = 'utf8') {
@@ -68,24 +53,10 @@ exports.Hmac = class CryptoHmac extends Transform {
 
     const { encoding = 'utf8' } = opts
 
-    if (typeof algorithm === 'string') {
-      if (algorithm in constants.hash) algorithm = constants.hash[algorithm]
-      else {
-        algorithm = algorithm.toUpperCase()
-
-        if (algorithm in constants.hash) algorithm = constants.hash[algorithm]
-        else {
-          throw errors.UNSUPPORTED_DIGEST_METHOD(
-            `Unsupported digest method '${algorithm}'`
-          )
-        }
-      }
-    }
-
     if (typeof key === 'string') key = Buffer.from(key, encoding)
 
     this._handle = binding.hmacInit(
-      algorithm,
+      constants.toHash(algorithm),
       key.buffer,
       key.byteOffset,
       key.byteLength
@@ -128,6 +99,146 @@ exports.Hmac = class CryptoHmac extends Transform {
 
 exports.createHmac = function createHmac(algorithm, key, opts) {
   return new exports.Hmac(algorithm, key, opts)
+}
+
+class CryptoCipher {
+  constructor(algorithm, key, iv, encrypt, opts = {}) {
+    const { encoding = 'utf8' } = opts
+
+    if (typeof key === 'string') key = Buffer.from(key, encoding)
+    if (typeof iv === 'string') iv = Buffer.from(iv, encoding)
+
+    algorithm = constants.toCipher(algorithm)
+
+    if (key.byteLength !== binding.cipherKeyLength(algorithm)) {
+      throw new RangeError('Invalid key length')
+    }
+
+    if (iv.byteLength !== binding.cipherIVLength(algorithm)) {
+      throw new RangeError('Invalid iv length')
+    }
+
+    this._blockSize = binding.cipherBlockSize(algorithm)
+
+    this._handle = binding.cipherInit(
+      algorithm,
+      key.buffer,
+      key.byteOffset,
+      key.byteLength,
+      iv.buffer,
+      iv.byteOffset,
+      iv.byteLength,
+      encrypt
+    )
+  }
+
+  update(data, inputEncoding = 'utf8', outputEncoding) {
+    if (typeof data === 'string') data = Buffer.from(data, inputEncoding)
+
+    const out = new ArrayBuffer(this._blockSize)
+
+    const written = binding.cipherUpdate(
+      this._handle,
+      data.buffer,
+      data.byteOffset,
+      data.byteLength,
+      out
+    )
+
+    const result = Buffer.from(out, 0, written)
+
+    return outputEncoding ? result.toString(outputEncoding) : result
+  }
+
+  final(outputEncoding) {
+    const out = new ArrayBuffer(this._blockSize)
+
+    const written = binding.cipherFinal(this._handle, out)
+
+    const result = Buffer.from(out, 0, written)
+
+    return outputEncoding ? result.toString(outputEncoding) : result
+  }
+
+  setPadding(pad) {
+    binding.cipherSetPadding(pad)
+  }
+}
+
+exports.Cipheriv = class CryptoCipheriv extends Transform {
+  constructor(algorithm, key, iv, opts = {}) {
+    super(opts)
+
+    this._cipher = new CryptoCipher(algorithm, key, iv, true, opts)
+  }
+
+  update(data, inputEncoding, outputEncoding) {
+    return this._cipher.update(data, inputEncoding, outputEncoding)
+  }
+
+  final(outputEncoding) {
+    return this._cipher.final(outputEncoding)
+  }
+
+  setAutoPadding(pad) {
+    this._cipher.setPadding(pad)
+
+    return this
+  }
+
+  _transform(data, encoding, cb) {
+    this.update(data)
+
+    cb(null)
+  }
+
+  _flush(cb) {
+    this.push(this.digest())
+
+    cb(null)
+  }
+}
+
+exports.createCipheriv = function createCipheriv(algorithm, key, iv, opts) {
+  return new exports.Cipheriv(algorithm, key, iv, opts)
+}
+
+exports.Decipheriv = class CryptoDeipheriv extends Transform {
+  constructor(algorithm, key, iv, opts = {}) {
+    super(opts)
+
+    this._cipher = new CryptoCipher(algorithm, key, iv, false, opts)
+  }
+
+  update(data, inputEncoding, outputEncoding) {
+    return this._cipher.update(data, inputEncoding, outputEncoding)
+  }
+
+  final(outputEncoding) {
+    return this._cipher.final(outputEncoding)
+  }
+
+  setAutoPadding(pad) {
+    this._cipher.setPadding(pad)
+
+    return this
+  }
+
+  _transform(data, encoding, cb) {
+    this.update(data)
+
+    cb(null)
+  }
+
+  _flush(cb) {
+    this.push(this.digest())
+
+    cb(null)
+  }
+}
+
+exports.createDecipheriv = function createDecipheriv(algorithm, key, iv, opts) {
+  return new exports.Decipheriv(algorithm, key, iv, opts)
 }
 
 exports.randomBytes = function randomBytes(size, cb) {
@@ -201,20 +312,6 @@ exports.pbkdf2 = function pbkdf2(
   if (typeof password === 'string') password = Buffer.from(password)
   if (typeof salt === 'string') salt = Buffer.from(salt)
 
-  if (typeof digest === 'string') {
-    if (digest in constants.hash) digest = constants.hash[digest]
-    else {
-      digest = digest.toUpperCase()
-
-      if (digest in constants.hash) digest = constants.hash[digest]
-      else {
-        throw errors.UNSUPPORTED_DIGEST_METHOD(
-          `Unsupported digest method '${digest}'`
-        )
-      }
-    }
-  }
-
   const buffer = Buffer.from(
     binding.pbkdf2(
       password.buffer,
@@ -224,7 +321,7 @@ exports.pbkdf2 = function pbkdf2(
       salt.byteOffset,
       salt.byteLength,
       iterations,
-      digest,
+      constants.toHash(digest),
       keylen
     )
   )

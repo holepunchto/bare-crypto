@@ -15,6 +15,40 @@ test('hmac sha1', (t) => {
   )
 })
 
+test('cipheriv aes-256-cbc', (t) => {
+  const key = Buffer.alloc(32, 'secret key')
+  const iv = Buffer.alloc(16, 'vector')
+
+  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv)
+
+  t.alike(cipher.update('hello world'), Buffer.alloc(0))
+  t.alike(
+    cipher.final(),
+    Buffer.from([
+      0xcf, 0xd3, 0x88, 0x0b, 0x6b, 0x4c, 0xa4, 0xd2, 0x9f, 0x1d, 0x76, 0xed,
+      0xa0, 0x0d, 0x91, 0x13
+    ])
+  )
+})
+
+test('decipheriv aes-256-cbc', (t) => {
+  const key = Buffer.alloc(32, 'secret key')
+  const iv = Buffer.alloc(16, 'vector')
+
+  const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv)
+
+  t.alike(
+    decipher.update(
+      Buffer.from([
+        0xcf, 0xd3, 0x88, 0x0b, 0x6b, 0x4c, 0xa4, 0xd2, 0x9f, 0x1d, 0x76, 0xed,
+        0xa0, 0x0d, 0x91, 0x13
+      ])
+    ),
+    Buffer.alloc(0)
+  )
+  t.alike(decipher.final(), Buffer.from('hello world'))
+})
+
 test('random bytes', (t) => {
   t.is(crypto.randomBytes(0).byteLength, 0)
   t.is(crypto.randomBytes(2).byteLength, 2)
