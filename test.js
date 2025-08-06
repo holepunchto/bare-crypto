@@ -328,6 +328,36 @@ test('HMAC - importKey + exportKey - raw format', async (t) => {
   t.alike(importedKey.usages, ['sign'])
 })
 
+test('ED25519 - importKey + exportKey - raw format', async (t) => {
+  const key = await crypto.webcrypto.subtle.generateKey(
+    { name: 'ED25519' },
+    false,
+    ['sign']
+  )
+
+  // https://w3c.github.io/webcrypto/#ed25519-operations-export-key
+  const exportedKey = await crypto.webcrypto.subtle.exportKey(
+    'raw',
+    key.publicKey
+  )
+
+  t.is(exportedKey.byteLength, 32)
+
+  // https://w3c.github.io/webcrypto/#ed25519-operations-import-key
+  const importedKey = await crypto.webcrypto.subtle.importKey(
+    'raw',
+    exportedKey,
+    { name: 'ED25519' },
+    false,
+    ['verify']
+  )
+
+  t.is(importedKey.type, 'public')
+  t.is(importedKey.extractable, false)
+  t.alike(importedKey.algorithm, { name: 'Ed25519' })
+  t.alike(importedKey.usages, ['verify'])
+})
+
 test('HMAC - importKey + exportKey - jwk format', async (t) => {
   const key = await crypto.webcrypto.subtle.generateKey(
     { name: 'HMAC', hash: 'SHA-256', length: 256 },
