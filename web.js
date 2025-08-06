@@ -58,7 +58,7 @@ exports.SubtleCrypto = class SubtleCrypto {
       throw errors.UNSUPPORTED_ALGORITHM(`Unsupported algorithm name '${name}'`)
     }
 
-    keyData = Buffer.from(keyData) // clone
+    keyData = Buffer.from(keyData)
 
     if (usages.length === 0) {
       throw new SyntaxError('keyUsages cannot be empty')
@@ -146,8 +146,6 @@ exports.SubtleCrypto = class SubtleCrypto {
 
     const hash = fromWebCryptoBareCrypto(key.algorithm.hash.name)
 
-    data = Buffer.from(data) // clone
-
     return crypto.createHmac(hash, key._key).update(data).digest()
   }
 
@@ -170,13 +168,10 @@ exports.SubtleCrypto = class SubtleCrypto {
       throw errors.INVALID_ACCESS('Unable to use the provided key to verify')
     }
 
-    signature = Buffer.from(signature) // clone
-    data = Buffer.from(data)
+    key = structuredClone(key)
+    key.usages = ['sign']
 
-    const keyClone = structuredClone(key)
-    keyClone.usages = ['sign']
-
-    return signature.equals(await this.sign(algorithm, keyClone, data))
+    return signature.equals(await this.sign(algorithm, key, data))
   }
 
   // https://w3c.github.io/webcrypto/#SubtleCrypto-method-deriveBits
@@ -221,12 +216,12 @@ exports.SubtleCrypto = class SubtleCrypto {
       )
     }
 
-    const keyClone = structuredClone(key)
-    keyClone.usages = ['deriveBits']
+    key = structuredClone(key)
+    key.usages = ['deriveBits']
 
     const derivedKey = await this.deriveBits(
       algorithm,
-      keyClone,
+      key,
       getKeyLength(derivedKeyAlgorithm)
     )
 
@@ -240,6 +235,8 @@ exports.SubtleCrypto = class SubtleCrypto {
   }
 }
 
+exports.subtle = new exports.SubtleCrypto()
+
 // https://w3c.github.io/webcrypto/#cryptokey-interface
 exports.CryptoKey = class CryptoKey {
   constructor(key, algorithm, extractable, usages) {
@@ -251,8 +248,6 @@ exports.CryptoKey = class CryptoKey {
     this.usages = usages
   }
 }
-
-exports.subtle = new exports.SubtleCrypto()
 
 function getKeyLength({ name, hash, length }) {
   name = name.toUpperCase()
