@@ -256,6 +256,10 @@ test('pbkdf2', (t) => {
 })
 
 // Web Crypto
+// Feature matrix: https://nodejs.org/docs/latest/api/webcrypto.html#algorithm-matrix
+
+// generateKey tests
+// Key usages matrix: https://nodejs.org/docs/latest/api/webcrypto.html#cryptokeyusages
 
 test('HMAC - generateKey', async (t) => {
   const key = await crypto.webcrypto.subtle.generateKey(
@@ -274,8 +278,8 @@ test('HMAC - generateKey', async (t) => {
   t.alike(key.usages, ['sign'])
 })
 
-// https://w3c.github.io/webcrypto/#ed25519-operations-generate-key
 test('ED25519 - generateKey', async (t) => {
+  // https://w3c.github.io/webcrypto/#ed25519-operations-generate-key
   const key = await crypto.webcrypto.subtle.generateKey(
     { name: 'ED25519' },
     false,
@@ -298,6 +302,9 @@ test('ED25519 - generateKey', async (t) => {
     t.alike(publicKey.usages, ['verify'])
   })
 })
+
+// importKey + exportKey tests
+// Format matrix: https://nodejs.org/docs/latest/api/webcrypto.html#subtleimportkeyformat-keydata-algorithm-extractable-keyusages
 
 test('HMAC - importKey + exportKey - raw format', async (t) => {
   const key = await crypto.webcrypto.subtle.generateKey(
@@ -488,7 +495,9 @@ test('PBKDF2 - importKey + exportKey', async (t) => {
   )
 })
 
-test('sign + verify', async (t) => {
+// sign + verify tests
+
+test('HMAC - sign + verify', async (t) => {
   const key = await crypto.webcrypto.subtle.generateKey(
     { name: 'HMAC', hash: 'SHA-256', length: 256 },
     true,
@@ -501,9 +510,38 @@ test('sign + verify', async (t) => {
 
   t.is(signature.byteLength, 32)
 
-  let verified = await crypto.webcrypto.subtle.verify(
+  const verified = await crypto.webcrypto.subtle.verify(
     'HMAC',
     key,
+    signature,
+    data
+  )
+
+  t.is(verified, true)
+})
+
+test('ED25519 - sign + verify', async (t) => {
+  const key = await crypto.webcrypto.subtle.generateKey(
+    { name: 'ED25519' },
+    false,
+    ['sign', 'verify']
+  )
+
+  const data = Buffer.from('hello world')
+
+  // https://w3c.github.io/webcrypto/#ed25519-operations-sign
+  const signature = await crypto.webcrypto.subtle.sign(
+    'Ed25519',
+    key.privateKey,
+    data
+  )
+
+  t.is(signature.byteLength, 64)
+
+  // https://w3c.github.io/webcrypto/#ed25519-operations-verify
+  const verified = await crypto.webcrypto.subtle.verify(
+    'Ed25519',
+    key.publicKey,
     signature,
     data
   )
