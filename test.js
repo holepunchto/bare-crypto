@@ -77,6 +77,28 @@ test('cipheriv aes-256-gcm, additional data', (t) => {
   )
 })
 
+test('cipheriv aes-256-gcm, larger nonce', (t) => {
+  const key = Buffer.alloc(32, 'secret key')
+  const nonce = Buffer.alloc(16, 'vector')
+
+  const cipher = crypto.createCipheriv('aes-256-gcm', key, nonce)
+
+  t.alike(cipher.update('hello world'), Buffer.alloc(0))
+  t.alike(
+    cipher.final(),
+    Buffer.from([
+      0x0d, 0xac, 0x88, 0x8a, 0x76, 0x58, 0xc6, 0x76, 0x12, 0x9b, 0x6a
+    ])
+  )
+  t.alike(
+    cipher.getAuthTag(),
+    Buffer.from([
+      0xfb, 0x3f, 0x45, 0xfe, 0xe8, 0x03, 0xfd, 0x51, 0xb1, 0xf2, 0xa7, 0x96,
+      0x0a, 0x06, 0xaa, 0x9a
+    ])
+  )
+})
+
 test('decipheriv aes-256-cbc', (t) => {
   const key = Buffer.alloc(32, 'secret key')
   const iv = Buffer.alloc(16, 'vector')

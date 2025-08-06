@@ -131,7 +131,7 @@ class CryptoCipher {
       throw new RangeError('Invalid key length')
     }
 
-    if (iv.byteLength !== binding.cipherIVLength(algorithm)) {
+    if (iv.byteLength < binding.cipherIVLength(algorithm)) {
       throw new RangeError('Invalid iv length')
     }
 
@@ -191,7 +191,7 @@ class CryptoAuthenticatedCipher {
       throw new RangeError('Invalid key length')
     }
 
-    if (nonce.byteLength !== binding.aeadNonceLength(algorithm)) {
+    if (nonce.byteLength < binding.aeadNonceLength(algorithm)) {
       throw new RangeError('Invalid nonce length')
     }
 
