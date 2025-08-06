@@ -436,6 +436,38 @@ test('ED25519 - importKey + exportKey - jwk format', async (t) => {
   })
 })
 
+test('ED25519 - importKey + exportKey - pkcs8 format', async (t) => {
+  const key = await crypto.webcrypto.subtle.generateKey(
+    { name: 'ED25519' },
+    true,
+    ['sign']
+  )
+
+  // https://w3c.github.io/webcrypto/#ed25519-operations-export-key
+  const encodedData = await crypto.webcrypto.subtle.exportKey(
+    'pkcs8',
+    key.privateKey
+  )
+
+  t.is(encodedData.byteLength, 48)
+
+  // https://w3c.github.io/webcrypto/#ed25519-operations-import-key
+  const importedKey = await crypto.webcrypto.subtle.importKey(
+    'pkcs8',
+    encodedData,
+    { name: 'ED25519' },
+    true,
+    ['sign']
+  )
+
+  t.test('imported key from pkcs8 encoded data', (t) => {
+    t.is(importedKey.type, 'private')
+    t.is(importedKey.extractable, true)
+    t.alike(importedKey.algorithm, { name: 'Ed25519' })
+    t.alike(importedKey.usages, ['sign'])
+  })
+})
+
 test('PBKDF2 - importKey + exportKey', async (t) => {
   const key = await crypto.webcrypto.subtle.importKey(
     'raw',
