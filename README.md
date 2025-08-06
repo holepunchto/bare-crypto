@@ -78,16 +78,20 @@ The supported hash algorithms.
 
 The supported symmetric cipher algorithms.
 
-| Constant    | Description                                                                                                                                                 |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `AES128ECB` | AES with a 128-bit key in ECB (Electronic Codebook) mode. Fast but insecure due to deterministic encryption of identical plaintext blocks. Not recommended. |
-| `AES128CBC` | AES with a 128-bit key in CBC (Cipher Block Chaining) mode. Provides better security than ECB by chaining blocks, but requires an IV and is slower.         |
-| `AES128CTR` | AES with a 128-bit key in CTR (Counter) mode. A secure and parallelizable mode that turns a block cipher into a stream cipher. Requires a nonce/IV.         |
-| `AES128OFB` | AES with a 128-bit key in OFB (Output Feedback) mode. Converts AES into a stream cipher; less common than CTR and more sensitive to IV reuse.               |
-| `AES256ECB` | AES with a 256-bit key in ECB mode. Inherits the weaknesses of ECB; not suitable for encrypting more than a block at a time securely.                       |
-| `AES256CBC` | AES with a 256-bit key in CBC mode. Commonly used and reasonably secure with proper IV and padding management.                                              |
-| `AES256CTR` | AES with a 256-bit key in CTR mode. Offers high performance and strong security if nonces are never reused.                                                 |
-| `AES256OFB` | AES with a 256-bit key in OFB mode. Like CTR, it turns AES into a stream cipher but with different feedback mechanics; less commonly used.                  |
+| Constant            | Description                                                                                                                                                  |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `AES128ECB`         | AES with a 128-bit key in ECB (Electronic Codebook) mode. Fast but insecure due to deterministic encryption of identical plaintext blocks. Not recommended.  |
+| `AES128CBC`         | AES with a 128-bit key in CBC (Cipher Block Chaining) mode. Provides better security than ECB by chaining blocks, but requires an IV and is slower.          |
+| `AES128CTR`         | AES with a 128-bit key in CTR (Counter) mode. A secure and parallelizable mode that turns a block cipher into a stream cipher. Requires a nonce/IV.          |
+| `AES128OFB`         | AES with a 128-bit key in OFB (Output Feedback) mode. Converts AES into a stream cipher; less common than CTR and more sensitive to IV reuse.                |
+| `AES256ECB`         | AES with a 256-bit key in ECB mode. Inherits the weaknesses of ECB; not suitable for encrypting more than a block at a time securely.                        |
+| `AES256CBC`         | AES with a 256-bit key in CBC mode. Commonly used and reasonably secure with proper IV and padding management.                                               |
+| `AES256CTR`         | AES with a 256-bit key in CTR mode. Offers high performance and strong security if nonces are never reused.                                                  |
+| `AES256OFB`         | AES with a 256-bit key in OFB mode. Like CTR, it turns AES into a stream cipher but with different feedback mechanics; less commonly used.                   |
+| `AES128GCM`         | AES with a 128-bit key in GCM (Galois/Counter Mode). Provides authenticated encryption with associated data (AEAD). Fast and secure with proper nonce usage. |
+| `AES256GCM`         | AES with a 256-bit key in GCM mode. Offers strong authenticated encryption; commonly used in TLS and secure messaging.                                       |
+| `CHACHA20POLY1305`  | A modern AEAD cipher combining the ChaCha20 stream cipher and Poly1305 MAC. Fast and secure, especially efficient on devices without AES hardware support.   |
+| `XCHACHA20POLY1305` | An extended variant of ChaCha20-Poly1305 that supports longer nonces (192-bit). Improves nonce reuse resistance and is easier to use safely.                 |
 
 ## License
 
