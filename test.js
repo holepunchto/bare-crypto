@@ -299,7 +299,7 @@ test('ED25519 - generateKey', async (t) => {
   })
 })
 
-test('HMAC - importKey + exportKey', async (t) => {
+test('HMAC - importKey + exportKey - raw format', async (t) => {
   const key = await crypto.webcrypto.subtle.generateKey(
     { name: 'HMAC', hash: 'SHA-256', length: 256 },
     true,
@@ -326,6 +326,45 @@ test('HMAC - importKey + exportKey', async (t) => {
     hash: { name: 'SHA-256' }
   })
   t.alike(importedKey.usages, ['sign'])
+})
+
+test('HMAC - importKey + exportKey - jwk format', async (t) => {
+  const key = await crypto.webcrypto.subtle.generateKey(
+    { name: 'HMAC', hash: 'SHA-256', length: 256 },
+    true,
+    ['verify']
+  )
+
+  // https://w3c.github.io/webcrypto/#hmac-operations-export-key
+  const exportedJwk = await crypto.webcrypto.subtle.exportKey('jwk', key)
+
+  t.test('exported jwk', (t) => {
+    t.is(exportedJwk.kty, 'oct')
+    t.is(exportedJwk.alg, 'HS256') // https://www.rfc-editor.org/rfc/rfc7518#section-7.1.2
+    t.ok(exportedJwk.k)
+    t.alike(exportedJwk.key_ops, ['verify'])
+    t.is(exportedJwk.ext, true)
+  })
+
+  // https://w3c.github.io/webcrypto/#hmac-operations-import-key
+  const importedKey = await crypto.webcrypto.subtle.importKey(
+    'jwk',
+    exportedJwk,
+    { name: 'HMAC', hash: 'SHA-256' },
+    true,
+    ['verify']
+  )
+
+  t.test('imported key from jwk', (t) => {
+    t.is(importedKey.type, 'secret')
+    t.is(importedKey.extractable, true)
+    t.alike(importedKey.algorithm, {
+      name: 'HMAC',
+      length: 256,
+      hash: { name: 'SHA-256' }
+    })
+    t.alike(importedKey.usages, ['verify'])
+  })
 })
 
 test('PBKDF2 - importKey + exportKey', async (t) => {
