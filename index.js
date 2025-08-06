@@ -162,6 +162,12 @@ exports.Cipheriv = class CryptoCipheriv extends Transform {
     return outputEncoding ? result.toString(outputEncoding) : result
   }
 
+  setAutoPadding(pad) {
+    binding.cipherSetPadding(pad)
+
+    return this
+  }
+
   _transform(data, encoding, cb) {
     this.update(data)
 
@@ -238,6 +244,12 @@ exports.Decipheriv = class CryptoDeipheriv extends Transform {
     const result = Buffer.from(out, 0, written)
 
     return outputEncoding ? result.toString(outputEncoding) : result
+  }
+
+  setAutoPadding(pad) {
+    binding.cipherSetPadding(pad)
+
+    return this
   }
 
   _transform(data, encoding, cb) {

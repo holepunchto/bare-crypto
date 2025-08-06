@@ -457,8 +457,8 @@ bare_crypto_cipher_update(js_env_t *env, js_callback_info_t *info) {
   err = js_get_arraybuffer_info(env, argv[0], (void **) &cipher, NULL);
   assert(err == 0);
 
-  void *data;
-  err = js_get_arraybuffer_info(env, argv[1], &data, NULL);
+  uint8_t *data;
+  err = js_get_arraybuffer_info(env, argv[1], (void **) &data, NULL);
   assert(err == 0);
 
   int64_t offset;
@@ -513,6 +513,32 @@ bare_crypto_cipher_final(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   return result;
+}
+
+static js_value_t *
+bare_crypto_cipher_set_padding(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 2;
+  js_value_t *argv[2];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 2);
+
+  bare_crypto_cipher_t *cipher;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &cipher, NULL);
+  assert(err == 0);
+
+  bool pad;
+  err = js_get_value_bool(env, argv[1], &pad);
+  assert(err == 0);
+
+  err = EVP_CIPHER_CTX_set_padding(&cipher->context, pad);
+  assert(err == 1);
+
+  return NULL;
 }
 
 static js_value_t *
@@ -636,6 +662,7 @@ bare_crypto_exports(js_env_t *env, js_value_t *exports) {
   V("cipherInit", bare_crypto_cipher_init)
   V("cipherUpdate", bare_crypto_cipher_update)
   V("cipherFinal", bare_crypto_cipher_final)
+  V("cipherSetPadding", bare_crypto_cipher_set_padding)
 
   V("randomFill", bare_crypto_random_fill)
 
