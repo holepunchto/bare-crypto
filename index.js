@@ -101,10 +101,8 @@ exports.createHmac = function createHmac(algorithm, key, opts) {
   return new exports.Hmac(algorithm, key, opts)
 }
 
-exports.Cipheriv = class CryptoCipheriv extends Transform {
-  constructor(algorithm, key, iv, opts = {}) {
-    super(opts)
-
+class CryptoCipher {
+  constructor(algorithm, key, iv, encrypt, opts = {}) {
     const { encoding = 'utf8' } = opts
 
     if (typeof key === 'string') key = Buffer.from(key, encoding)
@@ -130,7 +128,7 @@ exports.Cipheriv = class CryptoCipheriv extends Transform {
       iv.buffer,
       iv.byteOffset,
       iv.byteLength,
-      true
+      encrypt
     )
   }
 
@@ -162,8 +160,28 @@ exports.Cipheriv = class CryptoCipheriv extends Transform {
     return outputEncoding ? result.toString(outputEncoding) : result
   }
 
-  setAutoPadding(pad) {
+  setPadding(pad) {
     binding.cipherSetPadding(pad)
+  }
+}
+
+exports.Cipheriv = class CryptoCipheriv extends Transform {
+  constructor(algorithm, key, iv, opts = {}) {
+    super(opts)
+
+    this._cipher = new CryptoCipher(algorithm, key, iv, true, opts)
+  }
+
+  update(data, inputEncoding, outputEncoding) {
+    return this._cipher.update(data, inputEncoding, outputEncoding)
+  }
+
+  final(outputEncoding) {
+    return this._cipher.final(outputEncoding)
+  }
+
+  setAutoPadding(pad) {
+    this._cipher.setPadding(pad)
 
     return this
   }
@@ -189,65 +207,19 @@ exports.Decipheriv = class CryptoDeipheriv extends Transform {
   constructor(algorithm, key, iv, opts = {}) {
     super(opts)
 
-    const { encoding = 'utf8' } = opts
-
-    if (typeof key === 'string') key = Buffer.from(key, encoding)
-    if (typeof iv === 'string') iv = Buffer.from(iv, encoding)
-
-    algorithm = constants.toCipher(algorithm)
-
-    if (key.byteLength !== binding.cipherKeyLength(algorithm)) {
-      throw new RangeError('Invalid key length')
-    }
-
-    if (iv.byteLength !== binding.cipherIVLength(algorithm)) {
-      throw new RangeError('Invalid iv length')
-    }
-
-    this._blockSize = binding.cipherBlockSize(algorithm)
-
-    this._handle = binding.cipherInit(
-      algorithm,
-      key.buffer,
-      key.byteOffset,
-      key.byteLength,
-      iv.buffer,
-      iv.byteOffset,
-      iv.byteLength,
-      false
-    )
+    this._cipher = new CryptoCipher(algorithm, key, iv, false, opts)
   }
 
-  update(data, inputEncoding = 'utf8', outputEncoding) {
-    if (typeof data === 'string') data = Buffer.from(data, inputEncoding)
-
-    const out = new ArrayBuffer(this._blockSize)
-
-    const written = binding.cipherUpdate(
-      this._handle,
-      data.buffer,
-      data.byteOffset,
-      data.byteLength,
-      out
-    )
-
-    const result = Buffer.from(out, 0, written)
-
-    return outputEncoding ? result.toString(outputEncoding) : result
+  update(data, inputEncoding, outputEncoding) {
+    return this._cipher.update(data, inputEncoding, outputEncoding)
   }
 
   final(outputEncoding) {
-    const out = new ArrayBuffer(this._blockSize)
-
-    const written = binding.cipherFinal(this._handle, out)
-
-    const result = Buffer.from(out, 0, written)
-
-    return outputEncoding ? result.toString(outputEncoding) : result
+    return this._cipher.final(outputEncoding)
   }
 
   setAutoPadding(pad) {
-    binding.cipherSetPadding(pad)
+    this._cipher.setPadding(pad)
 
     return this
   }
