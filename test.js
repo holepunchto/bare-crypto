@@ -332,7 +332,7 @@ test('ED25519 - importKey + exportKey - raw format', async (t) => {
   const key = await crypto.webcrypto.subtle.generateKey(
     { name: 'ED25519' },
     false,
-    ['sign']
+    ['sign', 'verify']
   )
 
   // https://w3c.github.io/webcrypto/#ed25519-operations-export-key
@@ -393,6 +393,45 @@ test('HMAC - importKey + exportKey - jwk format', async (t) => {
       length: 256,
       hash: { name: 'SHA-256' }
     })
+    t.alike(importedKey.usages, ['verify'])
+  })
+})
+
+test('ED25519 - importKey + exportKey - jwk format', async (t) => {
+  const key = await crypto.webcrypto.subtle.generateKey(
+    { name: 'ED25519' },
+    false,
+    ['sign', 'verify']
+  )
+
+  // https://w3c.github.io/webcrypto/#ed25519-operations-export-key
+  const exportedJwk = await crypto.webcrypto.subtle.exportKey(
+    'jwk',
+    key.publicKey
+  )
+
+  t.test('exported jwk', (t) => {
+    t.is(exportedJwk.kty, 'OKP')
+    t.is(exportedJwk.alg, 'Ed25519')
+    t.is(exportedJwk.crv, 'Ed25519')
+    t.ok(exportedJwk.x)
+    t.alike(exportedJwk.key_ops, ['verify'])
+    t.is(exportedJwk.ext, true)
+  })
+
+  // https://w3c.github.io/webcrypto/#ed25519-operations-import-key
+  const importedKey = await crypto.webcrypto.subtle.importKey(
+    'jwk',
+    exportedJwk,
+    { name: 'ED25519' },
+    true,
+    ['verify']
+  )
+
+  t.test('imported key from jwk', (t) => {
+    t.is(importedKey.type, 'public')
+    t.is(importedKey.extractable, true)
+    t.alike(importedKey.algorithm, { name: 'Ed25519' })
     t.alike(importedKey.usages, ['verify'])
   })
 })
