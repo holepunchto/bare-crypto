@@ -24,19 +24,19 @@ console.log(digest)
 
 #### `const hash = createHash(algorithm[, options])`
 
-Create a new `Hash` instance with the specified algorithm and options. The options are passed to [`new Transform()`](https://github.com/mafintosh/streamxts--new-streamtransformoptions).
+Create a new `Hash` instance with the specified algorithm and options. The options are passed to [`new Transform()`](https://github.com/mafintosh/streamx#ts--new-streamtransformoptions).
 
 #### `const hmac = createHmac(algorithm, key[, options])`
 
-Create a new `Hmac` instance with the specified algorithm, key, and options. The options are passed to [`new Transform()`](https://github.com/mafintosh/streamxts--new-streamtransformoptions).
+Create a new `Hmac` instance with the specified algorithm, key, and options. The options are passed to [`new Transform()`](https://github.com/mafintosh/streamx#ts--new-streamtransformoptions).
 
 #### `const cipher = createCipheriv(algorithm, key, iv[, options])`
 
-Create a new `Cipheriv` instance using the specified algorithm, key, and initialization vector (`iv`). The options are passed to [`new Transform()`](https://github.com/mafintosh/streamxts--new-streamtransformoptions).
+Create a new `Cipheriv` instance using the specified algorithm, key, and initialization vector (`iv`). The options are passed to [`new Transform()`](https://github.com/mafintosh/streamx#ts--new-streamtransformoptions).
 
 #### `const decipher = createDecipheriv(algorithm, key, iv[, options])`
 
-Create a new `Decipheriv` instance using the specified algorithm, key, and initialization vector (`iv`). The options are passed to [`new Transform()`](https://github.com/mafintosh/streamxts--new-streamtransformoptions).
+Create a new `Decipheriv` instance using the specified algorithm, key, and initialization vector (`iv`). The options are passed to [`new Transform()`](https://github.com/mafintosh/streamx#ts--new-streamtransformoptions).
 
 #### `const buffer = randomBytes(size)`
 
