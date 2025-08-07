@@ -373,26 +373,48 @@ test('pbkdf2', (t) => {
   )
 })
 
-test('generateKey', async (t) => {
+test('HMAC - generateKey', async (t) => {
   const key = await crypto.webcrypto.subtle.generateKey(
     { name: 'HMAC', hash: 'SHA-256', length: 256 },
     true,
     ['sign']
   )
 
-  t.test('generateKey', (t) => {
-    t.is(key.type, 'secret')
-    t.is(key.extractable, true)
-    t.alike(key.algorithm, {
-      name: 'HMAC',
-      length: 256,
-      hash: { name: 'SHA-256' }
-    })
-    t.alike(key.usages, ['sign'])
+  t.is(key.type, 'secret')
+  t.is(key.extractable, true)
+  t.alike(key.algorithm, {
+    name: 'HMAC',
+    length: 256,
+    hash: { name: 'SHA-256' }
+  })
+  t.alike(key.usages, ['sign'])
+})
+
+test.skip('ED25519 - generateKey', async (t) => {
+  const key = await crypto.webcrypto.subtle.generateKey(
+    { name: 'ED25519' },
+    false,
+    ['sign', 'verify']
+  )
+
+  const { privateKey, publicKey } = key
+
+  t.test('privateKey', (t) => {
+    t.is(privateKey.type, 'private')
+    t.is(privateKey.extractable, false)
+    t.alike(privateKey.algorithm, { name: 'Ed25519' })
+    t.alike(privateKey.usages, ['sign'])
+  })
+
+  t.test('publicKey', (t) => {
+    t.is(publicKey.type, 'public')
+    t.is(publicKey.extractable, true)
+    t.alike(publicKey.algorithm, { name: 'Ed25519' })
+    t.alike(publicKey.usages, ['verify'])
   })
 })
 
-test('HMAC - importKey + exportKey', async (t) => {
+test('HMAC - importKey + exportKey - raw format', async (t) => {
   const key = await crypto.webcrypto.subtle.generateKey(
     { name: 'HMAC', hash: 'SHA-256', length: 256 },
     true,
@@ -421,6 +443,138 @@ test('HMAC - importKey + exportKey', async (t) => {
   t.alike(importedKey.usages, ['sign'])
 })
 
+test.skip('ED25519 - importKey + exportKey - raw format', async (t) => {
+  const key = await crypto.webcrypto.subtle.generateKey(
+    { name: 'ED25519' },
+    false,
+    ['sign', 'verify']
+  )
+
+  const exportedKey = await crypto.webcrypto.subtle.exportKey(
+    'raw',
+    key.publicKey
+  )
+
+  t.is(exportedKey.byteLength, 32)
+
+  const importedKey = await crypto.webcrypto.subtle.importKey(
+    'raw',
+    exportedKey,
+    { name: 'ED25519' },
+    false,
+    ['verify']
+  )
+
+  t.is(importedKey.type, 'public')
+  t.is(importedKey.extractable, false)
+  t.alike(importedKey.algorithm, { name: 'Ed25519' })
+  t.alike(importedKey.usages, ['verify'])
+})
+
+test.skip('HMAC - importKey + exportKey - jwk format', async (t) => {
+  const key = await crypto.webcrypto.subtle.generateKey(
+    { name: 'HMAC', hash: 'SHA-256', length: 256 },
+    true,
+    ['verify']
+  )
+
+  const exportedJwk = await crypto.webcrypto.subtle.exportKey('jwk', key)
+
+  t.test('exported jwk', (t) => {
+    t.is(exportedJwk.kty, 'oct')
+    t.is(exportedJwk.alg, 'HS256')
+    t.ok(exportedJwk.k)
+    t.alike(exportedJwk.key_ops, ['verify'])
+    t.is(exportedJwk.ext, true)
+  })
+
+  const importedKey = await crypto.webcrypto.subtle.importKey(
+    'jwk',
+    exportedJwk,
+    { name: 'HMAC', hash: 'SHA-256' },
+    true,
+    ['verify']
+  )
+
+  t.test('imported key from jwk', (t) => {
+    t.is(importedKey.type, 'secret')
+    t.is(importedKey.extractable, true)
+    t.alike(importedKey.algorithm, {
+      name: 'HMAC',
+      length: 256,
+      hash: { name: 'SHA-256' }
+    })
+    t.alike(importedKey.usages, ['verify'])
+  })
+})
+
+test.skip('ED25519 - importKey + exportKey - jwk format', async (t) => {
+  const key = await crypto.webcrypto.subtle.generateKey(
+    { name: 'ED25519' },
+    false,
+    ['sign', 'verify']
+  )
+
+  const exportedJwk = await crypto.webcrypto.subtle.exportKey(
+    'jwk',
+    key.publicKey
+  )
+
+  t.test('exported jwk', (t) => {
+    t.is(exportedJwk.kty, 'OKP')
+    t.is(exportedJwk.alg, 'Ed25519')
+    t.is(exportedJwk.crv, 'Ed25519')
+    t.ok(exportedJwk.x)
+    t.alike(exportedJwk.key_ops, ['verify'])
+    t.is(exportedJwk.ext, true)
+  })
+
+  const importedKey = await crypto.webcrypto.subtle.importKey(
+    'jwk',
+    exportedJwk,
+    { name: 'ED25519' },
+    true,
+    ['verify']
+  )
+
+  t.test('imported key from jwk', (t) => {
+    t.is(importedKey.type, 'public')
+    t.is(importedKey.extractable, true)
+    t.alike(importedKey.algorithm, { name: 'Ed25519' })
+    t.alike(importedKey.usages, ['verify'])
+  })
+})
+
+test.skip('ED25519 - importKey + exportKey - pkcs8 format', async (t) => {
+  const key = await crypto.webcrypto.subtle.generateKey(
+    { name: 'ED25519' },
+    true,
+    ['sign']
+  )
+
+  const encodedData = await crypto.webcrypto.subtle.exportKey(
+    'pkcs8',
+    key.privateKey
+  )
+
+  t.is(encodedData.byteLength, 48)
+
+  const importedKey = await crypto.webcrypto.subtle.importKey(
+    'pkcs8',
+    encodedData,
+    { name: 'ED25519' },
+    true,
+    ['sign']
+  )
+
+  t.test('imported key from pkcs8 encoded data', (t) => {
+    t.is(importedKey.type, 'private')
+    t.is(importedKey.extractable, true)
+    t.alike(importedKey.algorithm, { name: 'Ed25519' })
+    t.alike(importedKey.usages, ['sign'])
+  })
+})
+
 test('PBKDF2 - importKey + exportKey', async (t) => {
   const key = await crypto.webcrypto.subtle.importKey(
     'raw',
@@ -441,7 +595,7 @@ test('PBKDF2 - importKey + exportKey', async (t) => {
   )
 })
 
-test('sign + verify', async (t) => {
+test('HMAC - sign + verify', async (t) => {
   const key = await crypto.webcrypto.subtle.generateKey(
     { name: 'HMAC', hash: 'SHA-256', length: 256 },
     true,
@@ -457,6 +611,33 @@ test('sign + verify', async (t) => {
   const verified = await crypto.webcrypto.subtle.verify(
     'HMAC',
     key,
+    signature,
+    data
+  )
+
+  t.is(verified, true)
+})
+
+test.skip('ED25519 - sign + verify', async (t) => {
+  const key = await crypto.webcrypto.subtle.generateKey(
+    { name: 'ED25519' },
+    false,
+    ['sign', 'verify']
+  )
+
+  const data = Buffer.from('hello world')
+
+  const signature = await crypto.webcrypto.subtle.sign(
+    'Ed25519',
+    key.privateKey,
+    data
+  )
+
+  t.is(signature.byteLength, 64)
+
+  const verified = await crypto.webcrypto.subtle.verify(
+    'Ed25519',
+    key.publicKey,
     signature,
     data
   )
