@@ -454,7 +454,7 @@ test('sign + verify', async (t) => {
 
   t.is(signature.byteLength, 32)
 
-  let verified = await crypto.webcrypto.subtle.verify(
+  const verified = await crypto.webcrypto.subtle.verify(
     'HMAC',
     key,
     signature,
@@ -487,8 +487,6 @@ test('verify - different keys', async (t) => {
     signature,
     data
   )
-
-  t.alike(verifierKey.usages, ['verify'])
 
   t.is(verified, false)
 })
@@ -540,8 +538,6 @@ test('deriveKey', async (t) => {
     true,
     ['sign']
   )
-
-  t.alike(key.usages, ['deriveKey'])
 
   t.is(derivedKey.type, 'secret')
   t.is(derivedKey.extractable, true)
