@@ -49,6 +49,14 @@ exports.SubtleCrypto = class SubtleCrypto {
     switch (algorithm.name.toLowerCase()) {
       case 'hmac':
         return hmac.importKey(format, keyData, algorithm, extractable, usages)
+      case 'ed25519':
+        return ed25519.importKey(
+          format,
+          keyData,
+          algorithm,
+          extractable,
+          usages
+        )
       case 'pbkdf2':
         return pbkdf2.importKey(format, keyData, algorithm, extractable, usages)
       default:
@@ -67,6 +75,8 @@ exports.SubtleCrypto = class SubtleCrypto {
     switch (key.algorithm.name.toLowerCase()) {
       case 'hmac':
         return hmac.exportKey(format, key)
+      case 'ed25519':
+        return ed25519.exportKey(format, key)
       default:
         throw errors.NOT_SUPPORTED(
           `Algorithm '${key.algorithm.name}' does not support the exportKey() operation`
