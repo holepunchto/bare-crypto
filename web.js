@@ -158,9 +158,7 @@ exports.SubtleCrypto = class SubtleCrypto {
       derivedKeyType = { name: derivedKeyType }
     }
 
-    if (
-      algorithm.name.toLowerCase()() !== baseKey.algorithm.name.toLowerCase()
-    ) {
+    if (algorithm.name.toLowerCase() !== baseKey.algorithm.name.toLowerCase()) {
       throw errors.INVALID_ACCESS(
         `Algorithm '${algorithm.name}' does not match key'`
       )
