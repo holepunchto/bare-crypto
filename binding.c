@@ -9,29 +9,28 @@
 #include <stddef.h>
 
 enum {
+  // Digests
   bare_crypto_md5 = 1,
-  bare_crypto_sha1 = 2,
-  bare_crypto_sha256 = 3,
-  bare_crypto_sha512 = 4,
-  bare_crypto_blake2b256 = 5,
-};
+  bare_crypto_sha1,
+  bare_crypto_sha256,
+  bare_crypto_sha512,
+  bare_crypto_blake2b256,
 
-enum {
   // Unauthenticated ciphers
-  bare_crypto_aes_128_ecb = 1,
-  bare_crypto_aes_128_cbc = 2,
-  bare_crypto_aes_128_ctr = 3,
-  bare_crypto_aes_128_ofb = 4,
-  bare_crypto_aes_256_ecb = 5,
-  bare_crypto_aes_256_cbc = 6,
-  bare_crypto_aes_256_ctr = 7,
-  bare_crypto_aes_256_ofb = 8,
+  bare_crypto_aes_128_ecb,
+  bare_crypto_aes_128_cbc,
+  bare_crypto_aes_128_ctr,
+  bare_crypto_aes_128_ofb,
+  bare_crypto_aes_256_ecb,
+  bare_crypto_aes_256_cbc,
+  bare_crypto_aes_256_ctr,
+  bare_crypto_aes_256_ofb,
 
   // Authenticated ciphers
-  bare_crypto_aes_128_gcm = 9,
-  bare_crypto_aes_256_gcm = 10,
-  bare_crypto_chacha20_poly1305 = 11,
-  bare_crypto_xchacha20_poly1305 = 12,
+  bare_crypto_aes_128_gcm,
+  bare_crypto_aes_256_gcm,
+  bare_crypto_chacha20_poly1305,
+  bare_crypto_xchacha20_poly1305,
 };
 
 typedef struct {
