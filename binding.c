@@ -1,11 +1,13 @@
 #include <assert.h>
 #include <bare.h>
 #include <js.h>
+#include <openssl/bytestring.h>
 #include <openssl/cipher.h>
 #include <openssl/curve25519.h>
 #include <openssl/digest.h>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
+#include <openssl/mem.h>
 #include <openssl/rand.h>
 #include <stddef.h>
 
@@ -32,6 +34,9 @@ enum {
   bare_crypto_aes_256_gcm,
   bare_crypto_chacha20_poly1305,
   bare_crypto_xchacha20_poly1305,
+
+  // Signature algorithms
+  bare_crypto_ed25519,
 };
 
 typedef struct {
@@ -1006,6 +1011,210 @@ bare_crypto_ed25519_verify(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
+bare_crypto_ed25519_to_spki(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  uint8_t *public_key;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &public_key, NULL);
+  assert(err == 0);
+
+  EVP_PKEY *pkey = EVP_PKEY_new_raw_public_key(EVP_PKEY_ED25519, NULL, public_key, 32);
+
+  CBB bytes;
+  err = CBB_init(&bytes, 0);
+  assert(err == 1);
+
+  err = EVP_marshal_public_key(&bytes, pkey);
+  assert(err == 1);
+
+  EVP_PKEY_free(pkey);
+
+  uint8_t *der;
+  size_t len;
+  err = CBB_finish(&bytes, &der, &len);
+  assert(err == 1);
+
+  js_value_t *handle;
+
+  void *data;
+  err = js_create_arraybuffer(env, len, &data, &handle);
+  assert(err == 0);
+
+  memcpy(data, der, len);
+
+  OPENSSL_free(der);
+
+  return handle;
+}
+
+static js_value_t *
+bare_crypto_ed25519_from_spki(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 3;
+  js_value_t *argv[3];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 3);
+
+  uint8_t *der;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &der, NULL);
+  assert(err == 0);
+
+  uint32_t offset;
+  err = js_get_value_uint32(env, argv[1], &offset);
+  assert(err == 0);
+
+  uint32_t len;
+  err = js_get_value_uint32(env, argv[2], &len);
+  assert(err == 0);
+
+  CBS bytes;
+  CBS_init(&bytes, &der[offset], len);
+
+  EVP_PKEY *pkey = EVP_parse_public_key(&bytes);
+
+  if (pkey == NULL) {
+    err = js_throw_error(env, NULL, "Invalid input");
+    assert(err == 0);
+
+    return NULL;
+  }
+
+  js_value_t *handle;
+
+  uint8_t *public_key;
+  err = js_create_arraybuffer(env, ED25519_PUBLIC_KEY_LEN, (void **) &public_key, &handle);
+  assert(err == 0);
+
+  size_t written = ED25519_PUBLIC_KEY_LEN;
+  err = EVP_PKEY_get_raw_public_key(pkey, public_key, &written);
+
+  EVP_PKEY_free(pkey);
+
+  if (err != 1) {
+    err = js_throw_error(env, NULL, "Invalid input");
+    assert(err == 0);
+
+    return NULL;
+  }
+
+  return handle;
+}
+
+static js_value_t *
+bare_crypto_ed25519_to_pkcs8(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  uint8_t *private_key;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &private_key, NULL);
+  assert(err == 0);
+
+  EVP_PKEY *pkey = EVP_PKEY_new_raw_private_key(EVP_PKEY_ED25519, NULL, private_key, 32);
+
+  CBB bytes;
+  err = CBB_init(&bytes, 0);
+  assert(err == 1);
+
+  err = EVP_marshal_private_key(&bytes, pkey);
+  assert(err == 1);
+
+  EVP_PKEY_free(pkey);
+
+  uint8_t *der;
+  size_t len;
+  err = CBB_finish(&bytes, &der, &len);
+  assert(err == 1);
+
+  js_value_t *handle;
+
+  void *data;
+  err = js_create_arraybuffer(env, len, &data, &handle);
+  assert(err == 0);
+
+  memcpy(data, der, len);
+
+  OPENSSL_free(der);
+
+  return handle;
+}
+
+static js_value_t *
+bare_crypto_ed25519_from_pkcs8(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 3;
+  js_value_t *argv[3];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 3);
+
+  uint8_t *der;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &der, NULL);
+  assert(err == 0);
+
+  uint32_t offset;
+  err = js_get_value_uint32(env, argv[1], &offset);
+  assert(err == 0);
+
+  uint32_t len;
+  err = js_get_value_uint32(env, argv[2], &len);
+  assert(err == 0);
+
+  CBS bytes;
+  CBS_init(&bytes, &der[offset], len);
+
+  EVP_PKEY *pkey = EVP_parse_private_key(&bytes);
+
+  if (pkey == NULL) {
+    err = js_throw_error(env, NULL, "Invalid input");
+    assert(err == 0);
+
+    return NULL;
+  }
+
+  js_value_t *handle;
+
+  uint8_t *private_key;
+  err = js_create_arraybuffer(env, ED25519_PRIVATE_KEY_LEN, (void **) &private_key, &handle);
+  assert(err == 0);
+
+  size_t written = ED25519_PRIVATE_KEY_LEN;
+  err = EVP_PKEY_get_raw_private_key(pkey, private_key, &written);
+
+  EVP_PKEY_free(pkey);
+
+  if (err != 1) {
+    err = js_throw_error(env, NULL, "Invalid input");
+    assert(err == 0);
+
+    return NULL;
+  }
+
+  return handle;
+}
+
+static js_value_t *
 bare_crypto_random_fill(js_env_t *env, js_callback_info_t *info) {
   int err;
 
@@ -1139,6 +1348,10 @@ bare_crypto_exports(js_env_t *env, js_value_t *exports) {
   V("ed25519GenerateKeypair", bare_crypto_ed25519_generate_keypair)
   V("ed25519Sign", bare_crypto_ed25519_sign)
   V("ed25519Verify", bare_crypto_ed25519_verify)
+  V("ed25519ToSPKI", bare_crypto_ed25519_to_spki)
+  V("ed25519FromSPKI", bare_crypto_ed25519_from_spki)
+  V("ed25519ToPKCS8", bare_crypto_ed25519_to_pkcs8)
+  V("ed25519FromPKCS8", bare_crypto_ed25519_from_pkcs8)
 
   V("randomFill", bare_crypto_random_fill)
 
@@ -1174,6 +1387,9 @@ bare_crypto_exports(js_env_t *env, js_value_t *exports) {
   V("AES256GCM", bare_crypto_aes_256_gcm)
   V("CHACHA20POLY1305", bare_crypto_chacha20_poly1305)
   V("XCHACHA20POLY1305", bare_crypto_xchacha20_poly1305)
+
+  // Signature algorithms
+  V("ED25519", bare_crypto_ed25519)
 #undef V
 
   return exports;

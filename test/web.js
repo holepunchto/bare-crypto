@@ -164,7 +164,32 @@ test('subtle, importKey ed25519 + exportKey jwk', async (t) => {
   })
 })
 
-test.skip('subtle, importKey ed25519 + exportKey pkcs8', async (t) => {
+test('subtle, importKey ed25519 + exportKey spki', async (t) => {
+  const key = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, true, [
+    'sign'
+  ])
+
+  const encodedData = await webcrypto.subtle.exportKey('spki', key.publicKey)
+
+  t.is(encodedData.byteLength, 44)
+
+  const importedKey = await webcrypto.subtle.importKey(
+    'spki',
+    encodedData,
+    { name: 'Ed25519' },
+    true,
+    ['verify']
+  )
+
+  t.test('imported key from spki encoded data', (t) => {
+    t.is(importedKey.type, 'public')
+    t.is(importedKey.extractable, true)
+    t.alike(importedKey.algorithm, { name: 'Ed25519' })
+    t.alike(importedKey.usages, ['verify'])
+  })
+})
+
+test('subtle, importKey ed25519 + exportKey pkcs8', async (t) => {
   const key = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, true, [
     'sign'
   ])
