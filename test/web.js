@@ -18,8 +18,8 @@ test('subtle, generateKey hmac', async (t) => {
   t.alike(key.usages, ['sign'])
 })
 
-test.skip('subtle, generateKey ed25519', async (t) => {
-  const key = await webcrypto.subtle.generateKey({ name: 'ED25519' }, false, [
+test('subtle, generateKey ed25519', async (t) => {
+  const key = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, false, [
     'sign',
     'verify'
   ])
@@ -71,7 +71,7 @@ test('subtle, importKey hmac + exportKey raw', async (t) => {
 })
 
 test.skip('subtle, importKey ed25519 + exportKey raw', async (t) => {
-  const key = await webcrypto.subtle.generateKey({ name: 'ED25519' }, false, [
+  const key = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, false, [
     'sign',
     'verify'
   ])
@@ -83,7 +83,7 @@ test.skip('subtle, importKey ed25519 + exportKey raw', async (t) => {
   const importedKey = await webcrypto.subtle.importKey(
     'raw',
     exportedKey,
-    { name: 'ED25519' },
+    { name: 'Ed25519' },
     false,
     ['verify']
   )
@@ -132,7 +132,7 @@ test.skip('subtle, importKey hmac + exportKey jwk', async (t) => {
 })
 
 test.skip('subtle, importKey ed25519 + exportKey jwk', async (t) => {
-  const key = await webcrypto.subtle.generateKey({ name: 'ED25519' }, false, [
+  const key = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, false, [
     'sign',
     'verify'
   ])
@@ -151,7 +151,7 @@ test.skip('subtle, importKey ed25519 + exportKey jwk', async (t) => {
   const importedKey = await webcrypto.subtle.importKey(
     'jwk',
     exportedJwk,
-    { name: 'ED25519' },
+    { name: 'Ed25519' },
     true,
     ['verify']
   )
@@ -165,7 +165,7 @@ test.skip('subtle, importKey ed25519 + exportKey jwk', async (t) => {
 })
 
 test.skip('subtle, importKey ed25519 + exportKey pkcs8', async (t) => {
-  const key = await webcrypto.subtle.generateKey({ name: 'ED25519' }, true, [
+  const key = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, true, [
     'sign'
   ])
 
@@ -176,7 +176,7 @@ test.skip('subtle, importKey ed25519 + exportKey pkcs8', async (t) => {
   const importedKey = await webcrypto.subtle.importKey(
     'pkcs8',
     encodedData,
-    { name: 'ED25519' },
+    { name: 'Ed25519' },
     true,
     ['sign']
   )
@@ -227,8 +227,8 @@ test('subtle, sign + verify hmac', async (t) => {
   t.is(verified, true)
 })
 
-test.skip('subtle, sign + verify ed25519', async (t) => {
-  const key = await webcrypto.subtle.generateKey({ name: 'ED25519' }, false, [
+test('subtle, sign + verify ed25519', async (t) => {
+  const key = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, false, [
     'sign',
     'verify'
   ])

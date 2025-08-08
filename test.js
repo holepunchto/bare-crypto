@@ -1,6 +1,8 @@
 require('./test/cipher')
 require('./test/hash')
 require('./test/hmac')
+require('./test/key')
 require('./test/pbkdf2')
 require('./test/random')
+require('./test/signature')
 require('./test/web')

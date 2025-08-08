@@ -4,6 +4,8 @@ const Hmac = require('./lib/hmac')
 const { Cipheriv, Decipheriv } = require('./lib/cipher')
 const { randomBytes, randomFill } = require('./lib/random')
 const pbkdf2 = require('./lib/pbkdf2')
+const { generateKeyPair } = require('./lib/key')
+const { sign, verify } = require('./lib/signature')
 
 exports.constants = constants
 
@@ -52,6 +54,12 @@ exports.pbkdf2Sync = function pbkdf2Sync(
 ) {
   return exports.pbkdf2(password, salt, iterations, keylen, digest)
 }
+
+exports.generateKeyPair = generateKeyPair
+
+exports.sign = sign
+
+exports.verify = verify
 
 // For Node.js compatibility
 exports.webcrypto = require('./web')

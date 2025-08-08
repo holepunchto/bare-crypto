@@ -2,6 +2,7 @@
 #include <bare.h>
 #include <js.h>
 #include <openssl/cipher.h>
+#include <openssl/curve25519.h>
 #include <openssl/digest.h>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
@@ -893,6 +894,118 @@ bare_crypto_aead_open(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
+bare_crypto_ed25519_generate_keypair(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  js_value_t *result;
+  err = js_create_object(env, &result);
+  assert(err == 0);
+
+  js_value_t *handle;
+
+  uint8_t *public_key;
+  err = js_create_arraybuffer(env, ED25519_PUBLIC_KEY_LEN, (void **) &public_key, &handle);
+  assert(err == 0);
+
+  err = js_set_named_property(env, result, "publicKey", handle);
+  assert(err == 0);
+
+  uint8_t *private_key;
+  err = js_create_arraybuffer(env, ED25519_PRIVATE_KEY_LEN, (void **) &private_key, &handle);
+  assert(err == 0);
+
+  err = js_set_named_property(env, result, "privateKey", handle);
+  assert(err == 0);
+
+  ED25519_keypair(public_key, private_key);
+
+  return result;
+}
+
+static js_value_t *
+bare_crypto_ed25519_sign(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 4;
+  js_value_t *argv[4];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 4);
+
+  uint8_t *data;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &data, NULL);
+  assert(err == 0);
+
+  uint32_t offset;
+  err = js_get_value_uint32(env, argv[1], &offset);
+  assert(err == 0);
+
+  uint32_t len;
+  err = js_get_value_uint32(env, argv[2], &len);
+  assert(err == 0);
+
+  uint8_t *private_key;
+  err = js_get_arraybuffer_info(env, argv[3], (void **) &private_key, NULL);
+  assert(err == 0);
+
+  js_value_t *handle;
+
+  uint8_t *signature;
+  err = js_create_arraybuffer(env, ED25519_SIGNATURE_LEN, (void **) &signature, &handle);
+  assert(err == 0);
+
+  err = ED25519_sign(signature, &data[offset], len, private_key);
+  assert(err == 1);
+
+  return handle;
+}
+
+static js_value_t *
+bare_crypto_ed25519_verify(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 6;
+  js_value_t *argv[6];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 6);
+
+  uint8_t *data;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &data, NULL);
+  assert(err == 0);
+
+  uint32_t data_offset;
+  err = js_get_value_uint32(env, argv[1], &data_offset);
+  assert(err == 0);
+
+  uint32_t data_len;
+  err = js_get_value_uint32(env, argv[2], &data_len);
+  assert(err == 0);
+
+  uint8_t *signature;
+  err = js_get_arraybuffer_info(env, argv[3], (void **) &signature, NULL);
+  assert(err == 0);
+
+  uint32_t signature_offset;
+  err = js_get_value_uint32(env, argv[4], &signature_offset);
+  assert(err == 0);
+
+  uint8_t *public_key;
+  err = js_get_arraybuffer_info(env, argv[5], (void **) &public_key, NULL);
+  assert(err == 0);
+
+  js_value_t *result;
+  err = js_get_boolean(env, ED25519_verify(&data[data_offset], data_len, &signature[signature_offset], public_key), &result);
+  assert(err == 0);
+
+  return result;
+}
+
+static js_value_t *
 bare_crypto_random_fill(js_env_t *env, js_callback_info_t *info) {
   int err;
 
@@ -1022,6 +1135,10 @@ bare_crypto_exports(js_env_t *env, js_value_t *exports) {
   V("aeadInit", bare_crypto_aead_init)
   V("aeadSeal", bare_crypto_aead_seal)
   V("aeadOpen", bare_crypto_aead_open)
+
+  V("ed25519GenerateKeypair", bare_crypto_ed25519_generate_keypair)
+  V("ed25519Sign", bare_crypto_ed25519_sign)
+  V("ed25519Verify", bare_crypto_ed25519_verify)
 
   V("randomFill", bare_crypto_random_fill)
 

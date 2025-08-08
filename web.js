@@ -3,6 +3,7 @@ const errors = require('./lib/errors')
 const CryptoKey = require('./lib/web/crypto-key')
 const hmac = require('./lib/web/algorithm/hmac')
 const pbkdf2 = require('./lib/web/algorithm/pbkdf2')
+const ed25519 = require('./lib/web/algorithm/ed25519')
 
 exports.CryptoKey = CryptoKey
 
@@ -20,6 +21,8 @@ exports.SubtleCrypto = class SubtleCrypto {
     switch (algorithm.name.toLowerCase()) {
       case 'hmac':
         return hmac.generateKey(algorithm, extractable, usages)
+      case 'ed25519':
+        return ed25519.generateKey(algorithm, extractable, usages)
       default:
         throw errors.NOT_SUPPORTED(
           `Algorithm '${algorithm.name}' does not support the generateKey() operation`
@@ -75,7 +78,7 @@ exports.SubtleCrypto = class SubtleCrypto {
   async sign(algorithm, key, data) {
     if (typeof algorithm === 'string') algorithm = { name: algorithm }
 
-    if (algorithm.name.toUpperCase() !== key.algorithm.name) {
+    if (algorithm.name.toLowerCase() !== key.algorithm.name.toLowerCase()) {
       throw errors.INVALID_ACCESS(
         `Algorithm '${algorithm.name}' does not match key'`
       )
@@ -88,6 +91,8 @@ exports.SubtleCrypto = class SubtleCrypto {
     switch (algorithm.name.toLowerCase()) {
       case 'hmac':
         return hmac.sign(algorithm, key, data)
+      case 'ed25519':
+        return ed25519.sign(algorithm, key, data)
       default:
         throw errors.NOT_SUPPORTED(
           `Algorithm '${algorithm.name}' does not support the sign() operation`
@@ -99,7 +104,7 @@ exports.SubtleCrypto = class SubtleCrypto {
   async verify(algorithm, key, signature, data) {
     if (typeof algorithm === 'string') algorithm = { name: algorithm }
 
-    if (algorithm.name.toUpperCase() !== key.algorithm.name) {
+    if (algorithm.name.toLowerCase() !== key.algorithm.name.toLowerCase()) {
       throw errors.INVALID_ACCESS(
         `Algorithm '${algorithm.name}' does not match key'`
       )
@@ -112,6 +117,8 @@ exports.SubtleCrypto = class SubtleCrypto {
     switch (algorithm.name.toLowerCase()) {
       case 'hmac':
         return hmac.verify(algorithm, key, signature, data)
+      case 'ed25519':
+        return ed25519.verify(algorithm, key, signature, data)
       default:
         throw errors.NOT_SUPPORTED(
           `Algorithm '${algorithm.name}' does not support the verify() operation`
@@ -123,7 +130,7 @@ exports.SubtleCrypto = class SubtleCrypto {
   async deriveBits(algorithm, key, length) {
     if (typeof algorithm === 'string') algorithm = { name: algorithm }
 
-    if (algorithm.name.toUpperCase() !== key.algorithm.name) {
+    if (algorithm.name.toLowerCase() !== key.algorithm.name.toLowerCase()) {
       throw errors.INVALID_ACCESS(
         `Algorithm '${algorithm.name}' does not match key'`
       )
@@ -151,7 +158,9 @@ exports.SubtleCrypto = class SubtleCrypto {
       derivedKeyType = { name: derivedKeyType }
     }
 
-    if (algorithm.name.toUpperCase() !== baseKey.algorithm.name) {
+    if (
+      algorithm.name.toLowerCase()() !== baseKey.algorithm.name.toLowerCase()
+    ) {
       throw errors.INVALID_ACCESS(
         `Algorithm '${algorithm.name}' does not match key'`
       )
