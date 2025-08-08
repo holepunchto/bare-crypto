@@ -94,7 +94,7 @@ test.skip('subtle, importKey ed25519 + exportKey raw', async (t) => {
   t.alike(importedKey.usages, ['verify'])
 })
 
-test.skip('subtle, importKey hmac + exportKey jwk', async (t) => {
+test('subtle, importKey hmac + exportKey jwk', async (t) => {
   const key = await webcrypto.subtle.generateKey(
     { name: 'HMAC', hash: 'SHA-256', length: 256 },
     true,
