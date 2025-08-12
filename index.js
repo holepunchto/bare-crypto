@@ -2,7 +2,7 @@ const constants = require('./lib/constants')
 const Hash = require('./lib/hash')
 const Hmac = require('./lib/hmac')
 const { Cipheriv, Decipheriv } = require('./lib/cipher')
-const { randomBytes, randomFill } = require('./lib/random')
+const { randomBytes, randomFill, randomUUID } = require('./lib/random')
 const pbkdf2 = require('./lib/pbkdf2')
 const { generateKeyPair } = require('./lib/key')
 const { sign, verify } = require('./lib/signature')
@@ -41,6 +41,8 @@ exports.randomFill = randomFill
 exports.randomFillSync = function randomFillSync(buffer, offset, size) {
   return exports.randomFill(buffer, offset, size)
 }
+
+exports.randomUUID = randomUUID
 
 exports.pbkdf2 = pbkdf2
 

@@ -197,3 +197,7 @@ test('random fill, dataview, subarray', (t) => {
   t.is(v[6], 0)
   t.is(v[7], 0)
 })
+
+test('random uuid', (t) => {
+  t.comment(crypto.randomUUID())
+})

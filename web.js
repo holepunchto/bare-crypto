@@ -12,6 +12,9 @@ exports.getRandomValues = function getRandomValues(array) {
   return crypto.randomFillSync(array)
 }
 
+// https://w3c.github.io/webcrypto/#dfn-Crypto-method-randomUUID
+exports.randomUUID = crypto.randomUUID
+
 // https://w3c.github.io/webcrypto/#subtlecrypto-interface
 exports.SubtleCrypto = class SubtleCrypto {
   // https://w3c.github.io/webcrypto/#SubtleCrypto-method-generateKey
