@@ -1,10 +1,7 @@
-cmake_minimum_required(VERSION 3.31)
+cmake_minimum_required(VERSION 4.0)
 
 find_package(cmake-bare REQUIRED PATHS node_modules/cmake-bare)
 find_package(cmake-fetch REQUIRED PATHS node_modules/cmake-fetch)
-
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-set(CMAKE_MACOSX_BUNDLE OFF)
 
 project(bare_crypto C CXX)
 
@@ -20,7 +17,7 @@ else()
   enable_language(ASM)
 endif()
 
-fetch_package("github:google/boringssl#0.20250514.0")
+fetch_package("github:google/boringssl#0.20250818.0")
 
 add_bare_module(bare_crypto)
 
