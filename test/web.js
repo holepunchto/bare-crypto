@@ -131,7 +131,7 @@ test('subtle, importKey hmac + exportKey jwk', async (t) => {
   })
 })
 
-test('subtle, importKey ed25519 + exportKey jwk', async (t) => {
+test('subtle, importKey ed25519 + exportKey jwk, public key', async (t) => {
   const key = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, false, [
     'sign',
     'verify'
@@ -161,6 +161,39 @@ test('subtle, importKey ed25519 + exportKey jwk', async (t) => {
     t.is(importedKey.extractable, true)
     t.alike(importedKey.algorithm, { name: 'Ed25519' })
     t.alike(importedKey.usages, ['verify'])
+  })
+})
+
+test('subtle, importKey ed25519 + exportKey jwk, private key', async (t) => {
+  const key = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, true, [
+    'sign',
+    'verify'
+  ])
+
+  const exportedJwk = await webcrypto.subtle.exportKey('jwk', key.privateKey)
+
+  t.test('exported jwk', (t) => {
+    t.is(exportedJwk.kty, 'OKP')
+    t.is(exportedJwk.alg, 'Ed25519')
+    t.is(exportedJwk.crv, 'Ed25519')
+    t.ok(exportedJwk.x)
+    t.alike(exportedJwk.key_ops, ['sign'])
+    t.is(exportedJwk.ext, true)
+  })
+
+  const importedKey = await webcrypto.subtle.importKey(
+    'jwk',
+    exportedJwk,
+    { name: 'Ed25519' },
+    true,
+    ['sign']
+  )
+
+  t.test('imported key from jwk', (t) => {
+    t.is(importedKey.type, 'private')
+    t.is(importedKey.extractable, true)
+    t.alike(importedKey.algorithm, { name: 'Ed25519' })
+    t.alike(importedKey.usages, ['sign'])
   })
 })
 
