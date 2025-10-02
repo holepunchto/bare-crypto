@@ -1202,6 +1202,18 @@ bare_crypto_ed25519_from_pkcs8(js_env_t *env, js_callback_info_t *info) {
   size_t written = ED25519_PRIVATE_KEY_LEN;
   err = EVP_PKEY_get_raw_private_key(pkey, private_key, &written);
 
+  if (err != 1) {
+    EVP_PKEY_free(pkey);
+
+    err = js_throw_error(env, NULL, "Invalid input");
+    assert(err == 0);
+
+    return NULL;
+  }
+
+  written = ED25519_PUBLIC_KEY_LEN;
+  err = EVP_PKEY_get_raw_public_key(pkey, &private_key[32], &written);
+
   EVP_PKEY_free(pkey);
 
   if (err != 1) {
