@@ -44,7 +44,7 @@ exports.SubtleCrypto = class SubtleCrypto {
         if (ArrayBuffer.isView(keyData)) {
           keyData = Buffer.from(keyData)
         } else {
-          keyData = Buffer.concat([Buffer.from(keyData)])
+          keyData = Buffer.from(keyData.slice())
         }
         break
     }
