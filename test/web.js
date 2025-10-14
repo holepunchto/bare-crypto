@@ -19,10 +19,7 @@ test('subtle, generateKey hmac', async (t) => {
 })
 
 test('subtle, generateKey ed25519', async (t) => {
-  const key = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, false, [
-    'sign',
-    'verify'
-  ])
+  const key = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, false, ['sign', 'verify'])
 
   const { privateKey, publicKey } = key
 
@@ -71,10 +68,7 @@ test('subtle, importKey hmac + exportKey raw', async (t) => {
 })
 
 test('subtle, importKey ed25519 + exportKey raw', async (t) => {
-  const key = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, false, [
-    'sign',
-    'verify'
-  ])
+  const key = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, false, ['sign', 'verify'])
 
   const exportedKey = await webcrypto.subtle.exportKey('raw', key.publicKey)
 
@@ -132,10 +126,7 @@ test('subtle, importKey hmac + exportKey jwk', async (t) => {
 })
 
 test('subtle, importKey ed25519 + exportKey jwk, public key', async (t) => {
-  const key = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, false, [
-    'sign',
-    'verify'
-  ])
+  const key = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, false, ['sign', 'verify'])
 
   const exportedJwk = await webcrypto.subtle.exportKey('jwk', key.publicKey)
 
@@ -165,10 +156,7 @@ test('subtle, importKey ed25519 + exportKey jwk, public key', async (t) => {
 })
 
 test('subtle, importKey ed25519 + exportKey jwk, private key', async (t) => {
-  const key = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, true, [
-    'sign',
-    'verify'
-  ])
+  const key = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, true, ['sign', 'verify'])
 
   const exportedJwk = await webcrypto.subtle.exportKey('jwk', key.privateKey)
 
@@ -198,9 +186,7 @@ test('subtle, importKey ed25519 + exportKey jwk, private key', async (t) => {
 })
 
 test('subtle, importKey ed25519 + exportKey spki', async (t) => {
-  const key = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, true, [
-    'sign'
-  ])
+  const key = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, true, ['sign'])
 
   const encodedData = await webcrypto.subtle.exportKey('spki', key.publicKey)
 
@@ -223,9 +209,7 @@ test('subtle, importKey ed25519 + exportKey spki', async (t) => {
 })
 
 test('subtle, importKey ed25519 + exportKey pkcs8', async (t) => {
-  const key = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, true, [
-    'sign'
-  ])
+  const key = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, true, ['sign'])
 
   const encodedData = await webcrypto.subtle.exportKey('pkcs8', key.privateKey)
 
@@ -248,23 +232,17 @@ test('subtle, importKey ed25519 + exportKey pkcs8', async (t) => {
 })
 
 test('subtle, importKey pbkdf2 + exportKey raw', async (t) => {
-  const key = await webcrypto.subtle.importKey(
-    'raw',
-    Buffer.from('secret'),
-    'PBKDF2',
-    false,
-    ['deriveKey', 'deriveBits']
-  )
+  const key = await webcrypto.subtle.importKey('raw', Buffer.from('secret'), 'PBKDF2', false, [
+    'deriveKey',
+    'deriveBits'
+  ])
 
   t.is(key.type, 'secret')
   t.is(key.extractable, false)
   t.alike(key.algorithm, { name: 'PBKDF2' })
   t.alike(key.usages, ['deriveKey', 'deriveBits'])
 
-  await t.exception(
-    async () => webcrypto.subtle.exportKey('raw', key),
-    /INVALID_ACCESS/
-  )
+  await t.exception(async () => webcrypto.subtle.exportKey('raw', key), /INVALID_ACCESS/)
 })
 
 test('subtle, sign + verify hmac', async (t) => {
@@ -286,10 +264,7 @@ test('subtle, sign + verify hmac', async (t) => {
 })
 
 test('subtle, sign + verify ed25519', async (t) => {
-  const key = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, false, [
-    'sign',
-    'verify'
-  ])
+  const key = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, false, ['sign', 'verify'])
 
   const data = Buffer.from('hello world')
 
@@ -297,12 +272,7 @@ test('subtle, sign + verify ed25519', async (t) => {
 
   t.is(signature.byteLength, 64)
 
-  const verified = await webcrypto.subtle.verify(
-    'Ed25519',
-    key.publicKey,
-    signature,
-    data
-  )
+  const verified = await webcrypto.subtle.verify('Ed25519', key.publicKey, signature, data)
 
   t.is(verified, true)
 })
@@ -324,24 +294,15 @@ test('subtle, verify hmac, different keys', async (t) => {
 
   const signature = await webcrypto.subtle.sign('HMAC', signerKey, data)
 
-  const verified = await webcrypto.subtle.verify(
-    'HMAC',
-    verifierKey,
-    signature,
-    data
-  )
+  const verified = await webcrypto.subtle.verify('HMAC', verifierKey, signature, data)
 
   t.is(verified, false)
 })
 
 test('subtle, deriveBits pbkdf2', async (t) => {
-  const key = await webcrypto.subtle.importKey(
-    'raw',
-    Buffer.from('secret'),
-    'PBKDF2',
-    false,
-    ['deriveBits']
-  )
+  const key = await webcrypto.subtle.importKey('raw', Buffer.from('secret'), 'PBKDF2', false, [
+    'deriveBits'
+  ])
 
   const algorithm = {
     name: 'PBKDF2',
@@ -359,13 +320,9 @@ test('subtle, deriveBits pbkdf2', async (t) => {
 })
 
 test('subtle, deriveKey pbkdf2', async (t) => {
-  const key = await webcrypto.subtle.importKey(
-    'raw',
-    Buffer.from('secret'),
-    'PBKDF2',
-    false,
-    ['deriveKey']
-  )
+  const key = await webcrypto.subtle.importKey('raw', Buffer.from('secret'), 'PBKDF2', false, [
+    'deriveKey'
+  ])
 
   const algorithm = {
     name: 'PBKDF2',
