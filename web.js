@@ -53,13 +53,7 @@ exports.SubtleCrypto = class SubtleCrypto {
       case 'hmac':
         return hmac.importKey(format, keyData, algorithm, extractable, usages)
       case 'ed25519':
-        return ed25519.importKey(
-          format,
-          keyData,
-          algorithm,
-          extractable,
-          usages
-        )
+        return ed25519.importKey(format, keyData, algorithm, extractable, usages)
       case 'pbkdf2':
         return pbkdf2.importKey(format, keyData, algorithm, extractable, usages)
       default:
@@ -92,9 +86,7 @@ exports.SubtleCrypto = class SubtleCrypto {
     if (typeof algorithm === 'string') algorithm = { name: algorithm }
 
     if (algorithm.name.toLowerCase() !== key.algorithm.name.toLowerCase()) {
-      throw errors.INVALID_ACCESS(
-        `Algorithm '${algorithm.name}' does not match key'`
-      )
+      throw errors.INVALID_ACCESS(`Algorithm '${algorithm.name}' does not match key'`)
     }
 
     if (!key.usages.includes('sign')) {
@@ -118,9 +110,7 @@ exports.SubtleCrypto = class SubtleCrypto {
     if (typeof algorithm === 'string') algorithm = { name: algorithm }
 
     if (algorithm.name.toLowerCase() !== key.algorithm.name.toLowerCase()) {
-      throw errors.INVALID_ACCESS(
-        `Algorithm '${algorithm.name}' does not match key'`
-      )
+      throw errors.INVALID_ACCESS(`Algorithm '${algorithm.name}' does not match key'`)
     }
 
     if (!key.usages.includes('verify')) {
@@ -144,9 +134,7 @@ exports.SubtleCrypto = class SubtleCrypto {
     if (typeof algorithm === 'string') algorithm = { name: algorithm }
 
     if (algorithm.name.toLowerCase() !== key.algorithm.name.toLowerCase()) {
-      throw errors.INVALID_ACCESS(
-        `Algorithm '${algorithm.name}' does not match key'`
-      )
+      throw errors.INVALID_ACCESS(`Algorithm '${algorithm.name}' does not match key'`)
     }
 
     if (!key.usages.includes('deriveBits')) {
@@ -172,9 +160,7 @@ exports.SubtleCrypto = class SubtleCrypto {
     }
 
     if (algorithm.name.toLowerCase() !== baseKey.algorithm.name.toLowerCase()) {
-      throw errors.INVALID_ACCESS(
-        `Algorithm '${algorithm.name}' does not match key'`
-      )
+      throw errors.INVALID_ACCESS(`Algorithm '${algorithm.name}' does not match key'`)
     }
 
     if (!baseKey.usages.includes('deriveKey')) {

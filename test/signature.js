@@ -8,8 +8,5 @@ test('sign + verify, ed25519', (t) => {
 
   t.is(crypto.verify(null, Buffer.from('message'), publicKey, signature), true)
 
-  t.is(
-    crypto.verify(null, Buffer.from('other message'), publicKey, signature),
-    false
-  )
+  t.is(crypto.verify(null, Buffer.from('other message'), publicKey, signature), false)
 })

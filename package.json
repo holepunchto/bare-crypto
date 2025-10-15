@@ -55,7 +55,7 @@
     "cmake-bare": "^1.1.6",
     "cmake-fetch": "^1.0.0",
     "prettier": "^3.4.2",
-    "prettier-config-standard": "^7.0.0"
+    "prettier-config-holepunch": "^2.0.0"
   },
   "peerDependencies": {
     "bare-buffer": "*"

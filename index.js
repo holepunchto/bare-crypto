@@ -47,13 +47,7 @@ exports.randomUUID = randomUUID
 exports.pbkdf2 = pbkdf2
 
 // For Node.js compatibility
-exports.pbkdf2Sync = function pbkdf2Sync(
-  password,
-  salt,
-  iterations,
-  keylen,
-  digest
-) {
+exports.pbkdf2Sync = function pbkdf2Sync(password, salt, iterations, keylen, digest) {
   return exports.pbkdf2(password, salt, iterations, keylen, digest)
 }
 
