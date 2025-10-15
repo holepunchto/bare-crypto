@@ -196,3 +196,18 @@ exports.SubtleCrypto = class SubtleCrypto {
 }
 
 exports.subtle = new exports.SubtleCrypto()
+
+// https://w3c.github.io/webcrypto/#crypto-interface
+exports.Crypto = class Crypto {
+  get subtle() {
+    return exports.subtle
+  }
+
+  getRandomValues(array) {
+    return exports.getRandomValues(array)
+  }
+
+  randomUUID() {
+    return exports.randomUUID()
+  }
+}
