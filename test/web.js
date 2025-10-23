@@ -348,3 +348,12 @@ test('subtle, deriveKey pbkdf2', async (t) => {
   })
   t.alike(derivedKey.usages, ['sign'])
 })
+
+test('subtle, digest sha256', async (t) => {
+  const digest = await webcrypto.subtle.digest('SHA-256', Buffer.from('hello world'))
+
+  t.alike(
+    Buffer.from(digest).toString('hex'),
+    'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9'
+  )
+})

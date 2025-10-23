@@ -4,6 +4,7 @@ const CryptoKey = require('./lib/web/crypto-key')
 const hmac = require('./lib/web/algorithm/hmac')
 const pbkdf2 = require('./lib/web/algorithm/pbkdf2')
 const ed25519 = require('./lib/web/algorithm/ed25519')
+const sha = require('./lib/web/algorithm/sha')
 
 exports.CryptoKey = CryptoKey
 
@@ -192,6 +193,24 @@ exports.SubtleCrypto = class SubtleCrypto {
     }
 
     return this.importKey('raw', secret, derivedKeyType, extractable, usages)
+  }
+
+  // https://w3c.github.io/webcrypto/#SubtleCrypto-method-digest
+  async digest(algorithm, data) {
+    if (typeof algorithm === 'string') algorithm = { name: algorithm }
+
+    switch (algorithm.name.toLowerCase()) {
+      case 'sha-1':
+        return sha.digest('sha1', data)
+      case 'sha-256':
+        return sha.digest('sha256', data)
+      case 'sha-512':
+        return sha.digest('sha512', data)
+      default:
+        throw errors.NOT_SUPPORTED(
+          `Algorithm '${algorithm.name}' does not support the digest() operation`
+        )
+    }
   }
 }
 
