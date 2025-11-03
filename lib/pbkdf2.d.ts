@@ -6,7 +6,7 @@ declare function pbkdf2(
   salt: string | ArrayBuffer | ArrayBufferView,
   iterations: number,
   keylen: number,
-  digest: HashAlgorithm | Lowercase<HashAlgorithm> | number
+  digest: HashAlgorithm | number
 ): Buffer
 
 declare function pbkdf2(
@@ -14,7 +14,7 @@ declare function pbkdf2(
   salt: string | ArrayBuffer | ArrayBufferView,
   iterations: number,
   keylen: number,
-  digest: HashAlgorithm | Lowercase<HashAlgorithm> | number,
+  digest: HashAlgorithm | number,
   callback: (err: Error | null, buffer: Buffer) => void
 ): void
 

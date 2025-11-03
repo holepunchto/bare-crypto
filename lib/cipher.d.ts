@@ -2,20 +2,6 @@ import { Transform, TransformOptions } from 'bare-stream'
 import Buffer, { BufferEncoding } from 'bare-buffer'
 
 export type CipherAlgorithm =
-  | 'AES128CBC'
-  | 'AES128CTR'
-  | 'AES128ECB'
-  | 'AES128GCM'
-  | 'AES128OFB'
-  | 'AES256CBC'
-  | 'AES256CTR'
-  | 'AES256ECB'
-  | 'AES256GCM'
-  | 'AES256OFB'
-  | 'CHACHA20POLY1305'
-  | 'XCHACHA20POLY1305'
-
-export type CipherAlgorithmName =
   | 'aes-128-cbc'
   | 'aes-128-ctr'
   | 'aes-128-ecb'
@@ -31,7 +17,7 @@ export type CipherAlgorithmName =
 
 export class Cipheriv extends Transform {
   constructor(
-    algorithm: CipherAlgorithmName | CipherAlgorithm | Lowercase<CipherAlgorithm> | number,
+    algorithm: CipherAlgorithm | number,
     key: string | Buffer,
     iv: string | Buffer,
     opts?: TransformOptions<Cipheriv>
@@ -54,7 +40,7 @@ export class Cipheriv extends Transform {
 
 export class Decipheriv extends Transform {
   constructor(
-    algorithm: CipherAlgorithmName | CipherAlgorithm | Lowercase<CipherAlgorithm> | number,
+    algorithm: CipherAlgorithm | number,
     key: string | Buffer,
     iv: string | Buffer,
     opts?: TransformOptions<Cipheriv>

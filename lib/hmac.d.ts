@@ -4,7 +4,7 @@ import { type HashAlgorithm } from './hash'
 
 declare class CryptoHmac extends Transform {
   constructor(
-    algorithm: HashAlgorithm | Lowercase<HashAlgorithm> | number,
+    algorithm: HashAlgorithm | number,
     key: string | Buffer,
     opts?: TransformOptions<CryptoHmac>
   )
