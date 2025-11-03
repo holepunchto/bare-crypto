@@ -65,5 +65,5 @@ export {
   generateKeyPair,
   sign,
   verify,
-  web as webcrpyto
+  web as webcrypto
 }
