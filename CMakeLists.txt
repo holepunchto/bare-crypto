@@ -31,4 +31,5 @@ target_link_libraries(
   ${bare_crypto}
   PUBLIC
     ssl
+    decrepit
 )

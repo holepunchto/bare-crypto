@@ -9,6 +9,7 @@
 #include <openssl/hmac.h>
 #include <openssl/mem.h>
 #include <openssl/rand.h>
+#include <openssl/ripemd.h>
 #include <stddef.h>
 
 enum {
@@ -19,6 +20,7 @@ enum {
   bare_crypto_sha384,
   bare_crypto_sha512,
   bare_crypto_blake2b256,
+  bare_crypto_ripemd160,
 
   // Unauthenticated ciphers
   bare_crypto_aes_128_ecb,
@@ -42,7 +44,11 @@ enum {
 
 typedef struct {
   EVP_MD_CTX context;
-} bare_crypto_hash_t;
+} bare_crypto_digest_t;
+
+typedef struct {
+  RIPEMD160_CTX context;
+} bare_crypto_ripemd160_t;
 
 typedef struct {
   HMAC_CTX context;
@@ -57,7 +63,7 @@ typedef struct {
 } bare_crypto_aead_t;
 
 static inline const EVP_MD *
-bare_crypto__to_hash(js_env_t *env, int type) {
+bare_crypto__to_digest(js_env_t *env, int type) {
   int err;
 
   switch (type) {
@@ -74,7 +80,7 @@ bare_crypto__to_hash(js_env_t *env, int type) {
 #undef V
 
   default:
-    err = js_throw_error(env, NULL, "Unknown hash algorithm");
+    err = js_throw_error(env, NULL, "Unknown digest algorithm");
     assert(err == 0);
 
     return NULL;
@@ -132,7 +138,7 @@ bare_crypto__to_aead(js_env_t *env, int type) {
 }
 
 static js_value_t *
-bare_crypto_hash_init(js_env_t *env, js_callback_info_t *info) {
+bare_crypto_digest_init(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   size_t argc = 1;
@@ -149,24 +155,24 @@ bare_crypto_hash_init(js_env_t *env, js_callback_info_t *info) {
 
   js_value_t *handle;
 
-  bare_crypto_hash_t *hash;
-  err = js_create_arraybuffer(env, sizeof(bare_crypto_hash_t), (void **) &hash, &handle);
+  bare_crypto_digest_t *digest;
+  err = js_create_arraybuffer(env, sizeof(bare_crypto_digest_t), (void **) &digest, &handle);
   assert(err == 0);
 
-  const EVP_MD *algorithm = bare_crypto__to_hash(env, type);
+  const EVP_MD *algorithm = bare_crypto__to_digest(env, type);
 
   if (algorithm == NULL) return NULL;
 
-  EVP_MD_CTX_init(&hash->context);
+  EVP_MD_CTX_init(&digest->context);
 
-  err = EVP_DigestInit(&hash->context, algorithm);
+  err = EVP_DigestInit(&digest->context, algorithm);
   assert(err == 1);
 
   return handle;
 }
 
 static js_value_t *
-bare_crypto_hash_update(js_env_t *env, js_callback_info_t *info) {
+bare_crypto_digest_update(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   size_t argc = 4;
@@ -177,8 +183,8 @@ bare_crypto_hash_update(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 4);
 
-  bare_crypto_hash_t *hash;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &hash, NULL);
+  bare_crypto_digest_t *digest;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &digest, NULL);
   assert(err == 0);
 
   void *data;
@@ -193,14 +199,14 @@ bare_crypto_hash_update(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[3], &len);
   assert(err == 0);
 
-  err = EVP_DigestUpdate(&hash->context, &data[offset], len);
+  err = EVP_DigestUpdate(&digest->context, &data[offset], len);
   assert(err == 1);
 
   return NULL;
 }
 
 static js_value_t *
-bare_crypto_hash_final(js_env_t *env, js_callback_info_t *info) {
+bare_crypto_digest_final(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   size_t argc = 1;
@@ -211,19 +217,96 @@ bare_crypto_hash_final(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  bare_crypto_hash_t *hash;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &hash, NULL);
+  bare_crypto_digest_t *digest;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &digest, NULL);
   assert(err == 0);
 
   js_value_t *result;
 
-  size_t len = EVP_MD_CTX_size(&hash->context);
+  size_t len = EVP_MD_CTX_size(&digest->context);
 
-  uint8_t *digest;
-  err = js_create_arraybuffer(env, len, (void **) &digest, &result);
+  uint8_t *out;
+  err = js_create_arraybuffer(env, len, (void **) &out, &result);
   assert(err == 0);
 
-  err = EVP_DigestFinal(&hash->context, digest, NULL);
+  err = EVP_DigestFinal(&digest->context, out, NULL);
+  assert(err == 1);
+
+  return result;
+}
+
+static js_value_t *
+bare_crypto_ripemd160_init(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  js_value_t *handle;
+
+  bare_crypto_ripemd160_t *ripemd160;
+  err = js_create_arraybuffer(env, sizeof(bare_crypto_ripemd160_t), (void **) &ripemd160, &handle);
+  assert(err == 0);
+
+  RIPEMD160_Init(&ripemd160->context);
+
+  return handle;
+}
+
+static js_value_t *
+bare_crypto_ripemd160_update(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 4;
+  js_value_t *argv[4];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 4);
+
+  bare_crypto_ripemd160_t *ripemd160;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &ripemd160, NULL);
+  assert(err == 0);
+
+  void *data;
+  err = js_get_arraybuffer_info(env, argv[1], &data, NULL);
+  assert(err == 0);
+
+  int64_t offset;
+  err = js_get_value_int64(env, argv[2], &offset);
+  assert(err == 0);
+
+  int64_t len;
+  err = js_get_value_int64(env, argv[3], &len);
+  assert(err == 0);
+
+  err = RIPEMD160_Update(&ripemd160->context, &data[offset], len);
+  assert(err == 1);
+
+  return NULL;
+}
+
+static js_value_t *
+bare_crypto_ripemd160_final(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  bare_crypto_ripemd160_t *ripemd160;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &ripemd160, NULL);
+  assert(err == 0);
+
+  js_value_t *result;
+
+  uint8_t *out;
+  err = js_create_arraybuffer(env, RIPEMD160_DIGEST_LENGTH, (void **) &out, &result);
+  assert(err == 0);
+
+  err = RIPEMD160_Final(out, &ripemd160->context);
   assert(err == 1);
 
   return result;
@@ -263,7 +346,7 @@ bare_crypto_hmac_init(js_env_t *env, js_callback_info_t *info) {
   err = js_create_arraybuffer(env, sizeof(bare_crypto_hmac_t), (void **) &hmac, &handle);
   assert(err == 0);
 
-  const EVP_MD *algorithm = bare_crypto__to_hash(env, type);
+  const EVP_MD *algorithm = bare_crypto__to_digest(env, type);
 
   if (algorithm == NULL) return NULL;
 
@@ -1312,7 +1395,7 @@ bare_crypto_pbkdf2(js_env_t *env, js_callback_info_t *info) {
   err = js_create_arraybuffer(env, key_len, (void **) &out, &handle);
   assert(err == 0);
 
-  const EVP_MD *algorithm = bare_crypto__to_hash(env, type);
+  const EVP_MD *algorithm = bare_crypto__to_digest(env, type);
 
   if (algorithm == NULL) return NULL;
 
@@ -1335,9 +1418,13 @@ bare_crypto_exports(js_env_t *env, js_value_t *exports) {
     assert(err == 0); \
   }
 
-  V("hashInit", bare_crypto_hash_init)
-  V("hashUpdate", bare_crypto_hash_update)
-  V("hashFinal", bare_crypto_hash_final)
+  V("digestInit", bare_crypto_digest_init)
+  V("digestUpdate", bare_crypto_digest_update)
+  V("digestFinal", bare_crypto_digest_final)
+
+  V("ripemd160Init", bare_crypto_ripemd160_init)
+  V("ripemd160Update", bare_crypto_ripemd160_update)
+  V("ripemd160Final", bare_crypto_ripemd160_final)
 
   V("hmacInit", bare_crypto_hmac_init)
   V("hmacUpdate", bare_crypto_hmac_update)
@@ -1381,13 +1468,14 @@ bare_crypto_exports(js_env_t *env, js_value_t *exports) {
     assert(err == 0); \
   }
 
-  // Hash algorithms
+  // Digest algorithms
   V("MD5", bare_crypto_md5)
   V("SHA1", bare_crypto_sha1)
   V("SHA256", bare_crypto_sha256)
   V("SHA384", bare_crypto_sha384)
   V("SHA512", bare_crypto_sha512)
   V("BLAKE2B256", bare_crypto_blake2b256)
+  V("RIPEMD160", bare_crypto_ripemd160)
 
   // Cipher algorithms
   V("AES128ECB", bare_crypto_aes_128_ecb)
