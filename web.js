@@ -201,11 +201,13 @@ exports.SubtleCrypto = class SubtleCrypto {
 
     switch (algorithm.name.toLowerCase()) {
       case 'sha-1':
-        return sha.digest('sha1', data)
+        return sha.digest(crypto.constants.hash.SHA1, data)
       case 'sha-256':
-        return sha.digest('sha256', data)
+        return sha.digest(crypto.constants.hash.SHA256, data)
+      case 'sha-384':
+        return sha.digest(crypto.constants.hash.SHA384, data)
       case 'sha-512':
-        return sha.digest('sha512', data)
+        return sha.digest(crypto.constants.hash.SHA512, data)
       default:
         throw errors.NOT_SUPPORTED(
           `Algorithm '${algorithm.name}' does not support the digest() operation`

@@ -16,6 +16,7 @@ enum {
   bare_crypto_md5 = 1,
   bare_crypto_sha1,
   bare_crypto_sha256,
+  bare_crypto_sha384,
   bare_crypto_sha512,
   bare_crypto_blake2b256,
 
@@ -67,6 +68,7 @@ bare_crypto__to_hash(js_env_t *env, int type) {
     V(md5)
     V(sha1)
     V(sha256)
+    V(sha384)
     V(sha512)
     V(blake2b256)
 #undef V
@@ -1383,6 +1385,7 @@ bare_crypto_exports(js_env_t *env, js_value_t *exports) {
   V("MD5", bare_crypto_md5)
   V("SHA1", bare_crypto_sha1)
   V("SHA256", bare_crypto_sha256)
+  V("SHA384", bare_crypto_sha384)
   V("SHA512", bare_crypto_sha512)
   V("BLAKE2B256", bare_crypto_blake2b256)
 
