@@ -899,7 +899,11 @@ bare_crypto_aead_seal(js_env_t *env, js_callback_info_t *info) {
     assert(err == 0);
   }
 
-  return NULL;
+  js_value_t *result;
+  err = js_create_int32(env, written, &result);
+  assert(err == 0);
+
+  return result;
 }
 
 static js_value_t *
@@ -980,7 +984,11 @@ bare_crypto_aead_open(js_env_t *env, js_callback_info_t *info) {
     assert(err == 0);
   }
 
-  return NULL;
+  js_value_t *result;
+  err = js_create_int32(env, written, &result);
+  assert(err == 0);
+
+  return result;
 }
 
 static js_value_t *
