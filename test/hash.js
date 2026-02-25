@@ -14,3 +14,11 @@ test('hash ripemd160', (t) => {
     'daba326b8e276af34297f879f6234bcef2528efa'
   )
 })
+
+test('hash double digest should not crash', (t) => {
+  const hash = crypto.createHash('sha256')
+  hash.update('hello')
+  hash.digest()
+
+  t.exception(() => hash.digest(), 'calling digest() twice should throw, not crash')
+})
