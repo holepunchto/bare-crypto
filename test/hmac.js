@@ -7,3 +7,11 @@ test('hmac sha1', (t) => {
     '53497cb818cd33297778b3437cf20890eab27ae2'
   )
 })
+
+test('hmac double digest should not crash', (t) => {
+  const hmac = crypto.createHmac('sha256', 'secret key')
+  hmac.update('hello')
+  hmac.digest()
+
+  t.exception(() => hmac.digest(), 'calling digest() twice should throw, not crash')
+})

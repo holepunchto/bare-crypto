@@ -169,6 +169,32 @@ test('decipheriv aes-256-gcm, double final should not crash', (t) => {
   t.exception(() => decipher.final(), 'calling final() twice should throw, not crash')
 })
 
+test('cipheriv aes-256-cbc, double final should not crash', (t) => {
+  const key = Buffer.alloc(32, 'secret key')
+  const iv = Buffer.alloc(16, 'vector')
+
+  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv)
+  cipher.update('hello world')
+  cipher.final()
+
+  t.exception(() => cipher.final(), 'calling final() twice should throw, not crash')
+})
+
+test('decipheriv aes-256-cbc, double final should not crash', (t) => {
+  const key = Buffer.alloc(32, 'secret key')
+  const iv = Buffer.alloc(16, 'vector')
+
+  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv)
+  cipher.update('hello world')
+  const ciphertext = cipher.final()
+
+  const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv)
+  decipher.update(ciphertext)
+  decipher.final()
+
+  t.exception(() => decipher.final(), 'calling final() twice should throw, not crash')
+})
+
 test('decipheriv aes-256-gcm, additional data', (t) => {
   const key = Buffer.alloc(32, 'secret key')
   const nonce = Buffer.alloc(12, 'vector')
