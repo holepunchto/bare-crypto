@@ -140,6 +140,35 @@ test('decipheriv aes-256-gcm', (t) => {
   t.alike(decipher.final(), Buffer.from('hello world'))
 })
 
+test('cipheriv aes-256-gcm, double final should not crash', (t) => {
+  const key = Buffer.alloc(32, 'secret key')
+  const nonce = Buffer.alloc(12, 'vector')
+
+  const cipher = crypto.createCipheriv('aes-256-gcm', key, nonce)
+
+  cipher.update('hello world')
+  cipher.final()
+
+  t.exception(() => cipher.final(), 'calling final() twice should throw, not crash')
+})
+
+test('decipheriv aes-256-gcm, double final should not crash', (t) => {
+  const key = Buffer.alloc(32, 'secret key')
+  const nonce = Buffer.alloc(12, 'vector')
+
+  const cipher = crypto.createCipheriv('aes-256-gcm', key, nonce)
+  cipher.update('hello world')
+  const ciphertext = cipher.final()
+  const authTag = cipher.getAuthTag()
+
+  const decipher = crypto.createDecipheriv('aes-256-gcm', key, nonce)
+  decipher.setAuthTag(authTag)
+  decipher.update(ciphertext)
+  decipher.final()
+
+  t.exception(() => decipher.final(), 'calling final() twice should throw, not crash')
+})
+
 test('decipheriv aes-256-gcm, additional data', (t) => {
   const key = Buffer.alloc(32, 'secret key')
   const nonce = Buffer.alloc(12, 'vector')
