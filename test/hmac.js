@@ -15,3 +15,13 @@ test('hmac double digest should not crash', (t) => {
 
   t.exception(() => hmac.digest(), 'calling digest() twice should throw, not crash')
 })
+
+test('hmac, type guards', (t) => {
+  t.plan(3)
+
+  t.exception.all(() => crypto.createHmac(NaN, 'secret key'), /TypeError/)
+
+  t.exception(() => crypto.createHmac('sha1', NaN), /AssertionError/)
+
+  t.exception(() => crypto.createHmac('sha1', 'foo').update(NaN), /AssertionError/)
+})
