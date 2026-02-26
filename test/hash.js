@@ -15,6 +15,28 @@ test('hash ripemd160', (t) => {
   )
 })
 
+test('hash update after digest should not crash', (t) => {
+  const hash = crypto.createHash('sha256')
+  hash.update('hello')
+  hash.digest()
+
+  t.exception(
+    () => hash.update('more data'),
+    'calling update() after digest() should throw, not crash'
+  )
+})
+
+test('hash ripemd160 update after digest should not crash', (t) => {
+  const hash = crypto.createHash('ripemd160')
+  hash.update('hello')
+  hash.digest()
+
+  t.exception(
+    () => hash.update('more data'),
+    'calling update() after digest() should throw, not crash'
+  )
+})
+
 test('hash double digest should not crash', (t) => {
   const hash = crypto.createHash('sha256')
   hash.update('hello')

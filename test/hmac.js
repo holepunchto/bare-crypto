@@ -8,6 +8,17 @@ test('hmac sha1', (t) => {
   )
 })
 
+test('hmac update after digest should not crash', (t) => {
+  const hmac = crypto.createHmac('sha256', 'secret key')
+  hmac.update('hello')
+  hmac.digest()
+
+  t.exception(
+    () => hmac.update('more data'),
+    'calling update() after digest() should throw, not crash'
+  )
+})
+
 test('hmac double digest should not crash', (t) => {
   const hmac = crypto.createHmac('sha256', 'secret key')
   hmac.update('hello')
