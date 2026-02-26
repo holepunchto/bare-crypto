@@ -1,6 +1,6 @@
 {
   "name": "bare-crypto",
-  "version": "1.13.3",
+  "version": "1.13.4",
   "description": "Cryptographic primitives for JavaScript",
   "exports": {
     "./package": "./package.json",
