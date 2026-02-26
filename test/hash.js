@@ -20,7 +20,10 @@ test('hash update after digest should not crash', (t) => {
   hash.update('hello')
   hash.digest()
 
-  t.exception(() => hash.update('more data'), 'calling update() after digest() should throw, not crash')
+  t.exception(
+    () => hash.update('more data'),
+    'calling update() after digest() should throw, not crash'
+  )
 })
 
 test('hash ripemd160 update after digest should not crash', (t) => {
@@ -28,7 +31,10 @@ test('hash ripemd160 update after digest should not crash', (t) => {
   hash.update('hello')
   hash.digest()
 
-  t.exception(() => hash.update('more data'), 'calling update() after digest() should throw, not crash')
+  t.exception(
+    () => hash.update('more data'),
+    'calling update() after digest() should throw, not crash'
+  )
 })
 
 test('hash double digest should not crash', (t) => {

@@ -177,7 +177,10 @@ test('cipheriv aes-256-cbc, update after final should not crash', (t) => {
   cipher.update('hello world')
   cipher.final()
 
-  t.exception(() => cipher.update('more data'), 'calling update() after final() should throw, not crash')
+  t.exception(
+    () => cipher.update('more data'),
+    'calling update() after final() should throw, not crash'
+  )
 })
 
 test('cipheriv aes-256-cbc, setAutoPadding after final should not crash', (t) => {
@@ -188,7 +191,10 @@ test('cipheriv aes-256-cbc, setAutoPadding after final should not crash', (t) =>
   cipher.update('hello world')
   cipher.final()
 
-  t.exception(() => cipher.setAutoPadding(false), 'calling setAutoPadding() after final() should throw, not crash')
+  t.exception(
+    () => cipher.setAutoPadding(false),
+    'calling setAutoPadding() after final() should throw, not crash'
+  )
 })
 
 test('cipheriv aes-256-cbc, double final should not crash', (t) => {

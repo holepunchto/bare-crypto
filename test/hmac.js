@@ -13,7 +13,10 @@ test('hmac update after digest should not crash', (t) => {
   hmac.update('hello')
   hmac.digest()
 
-  t.exception(() => hmac.update('more data'), 'calling update() after digest() should throw, not crash')
+  t.exception(
+    () => hmac.update('more data'),
+    'calling update() after digest() should throw, not crash'
+  )
 })
 
 test('hmac double digest should not crash', (t) => {
