@@ -169,6 +169,28 @@ test('decipheriv aes-256-gcm, double final should not crash', (t) => {
   t.exception(() => decipher.final(), 'calling final() twice should throw, not crash')
 })
 
+test('cipheriv aes-256-cbc, update after final should not crash', (t) => {
+  const key = Buffer.alloc(32, 'secret key')
+  const iv = Buffer.alloc(16, 'vector')
+
+  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv)
+  cipher.update('hello world')
+  cipher.final()
+
+  t.exception(() => cipher.update('more data'), 'calling update() after final() should throw, not crash')
+})
+
+test('cipheriv aes-256-cbc, setAutoPadding after final should not crash', (t) => {
+  const key = Buffer.alloc(32, 'secret key')
+  const iv = Buffer.alloc(16, 'vector')
+
+  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv)
+  cipher.update('hello world')
+  cipher.final()
+
+  t.exception(() => cipher.setAutoPadding(false), 'calling setAutoPadding() after final() should throw, not crash')
+})
+
 test('cipheriv aes-256-cbc, double final should not crash', (t) => {
   const key = Buffer.alloc(32, 'secret key')
   const iv = Buffer.alloc(16, 'vector')
