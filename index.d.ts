@@ -39,8 +39,8 @@ declare function randomFillSync<B extends ArrayBuffer | ArrayBufferView>(
 ): B
 
 declare function pbkdf2Sync(
-  password: string | ArrayBuffer | ArrayBufferView,
-  salt: string | ArrayBuffer | ArrayBufferView,
+  password: string | ArrayBufferView,
+  salt: string | ArrayBufferView,
   iterations: number,
   keylen: number,
   digest: HashAlgorithm | number
