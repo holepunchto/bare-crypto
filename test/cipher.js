@@ -245,3 +245,36 @@ test('decipheriv aes-256-gcm, additional data', (t) => {
   )
   t.alike(decipher.final(), Buffer.from('hello world'))
 })
+
+test('cipher, type guards', (t) => {
+  t.plan(9)
+
+  t.exception(() => crypto.createCipheriv(NaN), /AssertionError/)
+  t.exception(() => crypto.createDecipheriv(NaN), /AssertionError/)
+
+  t.exception(() => crypto.createCipheriv('aes-256-cbc', NaN, NaN), /AssertionError/)
+  t.exception(() => crypto.createCipheriv('aes-256-gcm', NaN, NaN), /AssertionError/)
+
+  t.exception(() => crypto.createDecipheriv('aes-256-gcm', NaN, NaN), /AssertionError/)
+
+  t.exception(
+    () => crypto.createCipheriv('aes-256-cbc', Buffer.alloc(32), Buffer.alloc(16)).update(NaN),
+    /AssertionError/
+  )
+
+  t.exception(
+    () => crypto.createCipheriv('aes-256-gcm', Buffer.alloc(32), Buffer.alloc(16)).update(NaN),
+    /AssertionError/
+  )
+
+  t.exception(
+    () => crypto.createCipheriv('aes-256-gcm', Buffer.alloc(32), Buffer.alloc(16)).setAAD(NaN),
+    /AssertionError/
+  )
+
+  t.exception(
+    () =>
+      crypto.createDecipheriv('aes-256-gcm', Buffer.alloc(32), Buffer.alloc(16)).setAuthTag(NaN),
+    /AssertionError/
+  )
+})
