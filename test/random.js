@@ -201,3 +201,11 @@ test('random fill, dataview, subarray', (t) => {
 test('random uuid', (t) => {
   t.comment(crypto.randomUUID())
 })
+
+test('random, type guards', (t) => {
+  t.exception(() => crypto.randomBytes(NaN), /AssertionError/)
+
+  t.exception(() => crypto.randomFill(NaN, 1, 2), /AssertionError/)
+  t.exception(() => crypto.randomFill(Buffer.alloc(1), NaN, 2), /AssertionError/)
+  t.exception(() => crypto.randomFill(Buffer.alloc(1), 1, NaN), /AssertionError/)
+})

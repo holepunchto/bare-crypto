@@ -44,3 +44,12 @@ test('hash double digest should not crash', (t) => {
 
   t.exception(() => hash.digest(), 'calling digest() twice should throw, not crash')
 })
+
+test('hash, type guards', (t) => {
+  t.plan(3)
+
+  t.exception(() => crypto.createHash(NaN), /AssertionError/)
+
+  t.exception(() => crypto.createHash('sha1').update(NaN), /AssertionError/)
+  t.exception(() => crypto.createHash('ripemd160').update(NaN), /AssertionError/)
+})
