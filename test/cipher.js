@@ -221,8 +221,8 @@ test('decipheriv aes-256-gcm, additional data', (t) => {
 test('cipher, type guards', (t) => {
   t.plan(9)
 
-  t.exception.all(() => crypto.createCipheriv(NaN), /TypeError/)
-  t.exception.all(() => crypto.createDecipheriv(NaN), /TypeError/)
+  t.exception(() => crypto.createCipheriv(NaN), /AssertionError/)
+  t.exception(() => crypto.createDecipheriv(NaN), /AssertionError/)
 
   t.exception(() => crypto.createCipheriv('aes-256-cbc', NaN, NaN), /AssertionError/)
   t.exception(() => crypto.createCipheriv('aes-256-gcm', NaN, NaN), /AssertionError/)

@@ -19,5 +19,5 @@ test('pbkdf2, type guards', (t) => {
 
   t.exception(() => crypto.pbkdf2('secret', 'salt', 100000, NaN, 'sha512'), /AssertionError/)
 
-  t.exception.all(() => crypto.pbkdf2('secret', 'salt', 100000, 64, NaN), /TypeError/)
+  t.exception(() => crypto.pbkdf2('secret', 'salt', 100000, 64, NaN), /AssertionError/)
 })

@@ -9,5 +9,5 @@ test('generateKeyPair, ed25519', (t) => {
 })
 
 test('type guards', (t) => {
-  t.exception.all(() => crypto.generateKeyPair(NaN), /TypeError/)
+  t.exception(() => crypto.generateKeyPair(NaN), /AssertionError/)
 })
