@@ -985,6 +985,8 @@ bare_crypto_aead_seal(js_env_t *env, js_callback_info_t *info) {
   if (err != 1) {
     err = js_throw_error(env, NULL, "Encryption failed");
     assert(err == 0);
+
+    return NULL;
   }
 
   js_value_t *result;
@@ -1094,6 +1096,8 @@ bare_crypto_aead_open(js_env_t *env, js_callback_info_t *info) {
   if (err != 1) {
     err = js_throw_error(env, NULL, "Decryption failed");
     assert(err == 0);
+
+    return NULL;
   }
 
   js_value_t *result;
