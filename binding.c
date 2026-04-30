@@ -153,15 +153,15 @@ bare_crypto_digest_init(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_uint32(env, argv[0], &type);
   assert(err == 0);
 
+  const EVP_MD *algorithm = bare_crypto__to_digest(env, type);
+
+  if (algorithm == NULL) return NULL;
+
   js_value_t *handle;
 
   bare_crypto_digest_t *digest;
   err = js_create_arraybuffer(env, sizeof(bare_crypto_digest_t), (void **) &digest, &handle);
   assert(err == 0);
-
-  const EVP_MD *algorithm = bare_crypto__to_digest(env, type);
-
-  if (algorithm == NULL) return NULL;
 
   EVP_MD_CTX_init(&digest->context);
 
@@ -364,15 +364,15 @@ bare_crypto_hmac_init(js_env_t *env, js_callback_info_t *info) {
     return NULL;
   }
 
+  const EVP_MD *algorithm = bare_crypto__to_digest(env, type);
+
+  if (algorithm == NULL) return NULL;
+
   js_value_t *handle;
 
   bare_crypto_hmac_t *hmac;
   err = js_create_arraybuffer(env, sizeof(bare_crypto_hmac_t), (void **) &hmac, &handle);
   assert(err == 0);
-
-  const EVP_MD *algorithm = bare_crypto__to_digest(env, type);
-
-  if (algorithm == NULL) return NULL;
 
   HMAC_CTX_init(&hmac->context);
 
