@@ -651,6 +651,8 @@ bare_crypto_cipher_update(js_env_t *env, js_callback_info_t *info) {
   err = EVP_CipherUpdate(&cipher->context, out, &written, &data[offset], len);
 
   if (err != 1) {
+    EVP_CIPHER_CTX_cleanup(&cipher->context);
+
     err = js_throw_error(env, NULL, "Cipher update failed");
     assert(err == 0);
 
