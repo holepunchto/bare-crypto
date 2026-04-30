@@ -1395,6 +1395,7 @@ bare_crypto_ed25519_to_pkcs8(js_env_t *env, js_callback_info_t *info) {
 
   memcpy(data, der, len);
 
+  OPENSSL_cleanse(der, len);
   OPENSSL_free(der);
 
   return handle;
