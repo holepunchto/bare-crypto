@@ -1171,8 +1171,16 @@ bare_crypto_ed25519_sign(js_env_t *env, js_callback_info_t *info) {
   }
 
   uint8_t *private_key;
-  err = js_get_arraybuffer_info(env, argv[3], (void **) &private_key, NULL);
+  size_t private_key_cap;
+  err = js_get_arraybuffer_info(env, argv[3], (void **) &private_key, &private_key_cap);
   assert(err == 0);
+
+  if (private_key_cap < ED25519_PRIVATE_KEY_LEN) {
+    err = js_throw_range_error(env, NULL, "Buffer out of range");
+    assert(err == 0);
+
+    return NULL;
+  }
 
   js_value_t *handle;
 
@@ -1235,8 +1243,16 @@ bare_crypto_ed25519_verify(js_env_t *env, js_callback_info_t *info) {
   }
 
   uint8_t *public_key;
-  err = js_get_arraybuffer_info(env, argv[5], (void **) &public_key, NULL);
+  size_t public_key_cap;
+  err = js_get_arraybuffer_info(env, argv[5], (void **) &public_key, &public_key_cap);
   assert(err == 0);
+
+  if (public_key_cap < ED25519_PUBLIC_KEY_LEN) {
+    err = js_throw_range_error(env, NULL, "Buffer out of range");
+    assert(err == 0);
+
+    return NULL;
+  }
 
   js_value_t *result;
   err = js_get_boolean(env, ED25519_verify(&data[data_offset], data_len, &signature[signature_offset], public_key), &result);
@@ -1258,8 +1274,16 @@ bare_crypto_ed25519_to_spki(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 1);
 
   uint8_t *public_key;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &public_key, NULL);
+  size_t public_key_cap;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &public_key, &public_key_cap);
   assert(err == 0);
+
+  if (public_key_cap < ED25519_PUBLIC_KEY_LEN) {
+    err = js_throw_range_error(env, NULL, "Buffer out of range");
+    assert(err == 0);
+
+    return NULL;
+  }
 
   EVP_PKEY *pkey = EVP_PKEY_new_raw_public_key(EVP_PKEY_ED25519, NULL, public_key, 32);
 
@@ -1368,8 +1392,16 @@ bare_crypto_ed25519_to_pkcs8(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 1);
 
   uint8_t *private_key;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &private_key, NULL);
+  size_t private_key_cap;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &private_key, &private_key_cap);
   assert(err == 0);
+
+  if (private_key_cap < ED25519_PRIVATE_KEY_LEN) {
+    err = js_throw_range_error(env, NULL, "Buffer out of range");
+    assert(err == 0);
+
+    return NULL;
+  }
 
   EVP_PKEY *pkey = EVP_PKEY_new_raw_private_key(EVP_PKEY_ED25519, NULL, private_key, 32);
 
