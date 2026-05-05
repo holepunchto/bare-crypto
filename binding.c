@@ -683,8 +683,16 @@ bare_crypto_cipher_final(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   uint8_t *out;
-  err = js_get_arraybuffer_info(env, argv[1], (void **) &out, NULL);
+  size_t out_cap;
+  err = js_get_arraybuffer_info(env, argv[1], (void **) &out, &out_cap);
   assert(err == 0);
+
+  if (out_cap < (size_t) EVP_CIPHER_CTX_block_size(&cipher->context)) {
+    err = js_throw_range_error(env, NULL, "Buffer out of range");
+    assert(err == 0);
+
+    return NULL;
+  }
 
   int written;
   err = EVP_CipherFinal(&cipher->context, out, &written);
