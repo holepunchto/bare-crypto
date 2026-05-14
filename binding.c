@@ -1,3 +1,7 @@
+#if !defined(_WIN32) && !defined(_GNU_SOURCE)
+#define _GNU_SOURCE
+#endif
+
 #include <assert.h>
 #include <bare.h>
 #include <js.h>
