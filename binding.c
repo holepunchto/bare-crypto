@@ -12,6 +12,29 @@
 #include <openssl/ripemd.h>
 #include <stddef.h>
 
+#if defined(_WIN32)
+#include <windows.h>
+#else
+#include <dlfcn.h>
+#endif
+
+static void
+bare_crypto__pin(void) {
+#if defined(_WIN32)
+  HMODULE module;
+  GetModuleHandleExA(
+    GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN,
+    (LPCSTR) &bare_crypto__pin,
+    &module
+  );
+#else
+  Dl_info info;
+  if (dladdr((void *) &bare_crypto__pin, &info) && info.dli_fname) {
+    dlopen(info.dli_fname, RTLD_LAZY | RTLD_NOLOAD | RTLD_NODELETE);
+  }
+#endif
+}
+
 enum {
   // Digests
   bare_crypto_md5 = 1,
@@ -1639,6 +1662,8 @@ bare_crypto_pbkdf2(js_env_t *env, js_callback_info_t *info) {
 static js_value_t *
 bare_crypto_exports(js_env_t *env, js_value_t *exports) {
   int err;
+
+  bare_crypto__pin();
 
 #define V(name, fn) \
   { \
