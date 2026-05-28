@@ -49,13 +49,7 @@ test('timing safe equal, mixed view types', (t) => {
 })
 
 test('timing safe equal, type guards', (t) => {
-  t.exception(
-    () => crypto.timingSafeEqual('abcd', Buffer.from('abcd')),
-    /AssertionError/
-  )
+  t.exception(() => crypto.timingSafeEqual('abcd', Buffer.from('abcd')), /AssertionError/)
 
-  t.exception(
-    () => crypto.timingSafeEqual(Buffer.from('abcd'), 'abcd'),
-    /AssertionError/
-  )
+  t.exception(() => crypto.timingSafeEqual(Buffer.from('abcd'), 'abcd'), /AssertionError/)
 })
