@@ -6,6 +6,7 @@ const { randomBytes, randomFill, randomUUID } = require('./lib/random')
 const pbkdf2 = require('./lib/pbkdf2')
 const { generateKeyPair } = require('./lib/key')
 const { sign, verify } = require('./lib/signature')
+const { timingSafeEqual } = require('./lib/timing')
 
 exports.constants = constants
 
@@ -56,6 +57,8 @@ exports.generateKeyPair = generateKeyPair
 exports.sign = sign
 
 exports.verify = verify
+
+exports.timingSafeEqual = timingSafeEqual
 
 // For Node.js compatibility
 exports.webcrypto = require('./web')

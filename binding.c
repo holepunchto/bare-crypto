@@ -1664,6 +1664,72 @@ bare_crypto_pbkdf2(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
+bare_crypto_timing_safe_equal(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 6;
+  js_value_t *argv[6];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 6);
+
+  uint8_t *a;
+  size_t a_cap;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &a, &a_cap);
+  assert(err == 0);
+
+  int64_t a_offset;
+  err = js_get_value_int64(env, argv[1], &a_offset);
+  assert(err == 0);
+
+  int64_t a_len;
+  err = js_get_value_int64(env, argv[2], &a_len);
+  assert(err == 0);
+
+  if (a_offset < 0 || a_len < 0 || a_offset + a_len > (int64_t) a_cap) {
+    err = js_throw_range_error(env, NULL, "Buffer out of range");
+    assert(err == 0);
+
+    return NULL;
+  }
+
+  uint8_t *b;
+  size_t b_cap;
+  err = js_get_arraybuffer_info(env, argv[3], (void **) &b, &b_cap);
+  assert(err == 0);
+
+  int64_t b_offset;
+  err = js_get_value_int64(env, argv[4], &b_offset);
+  assert(err == 0);
+
+  int64_t b_len;
+  err = js_get_value_int64(env, argv[5], &b_len);
+  assert(err == 0);
+
+  if (b_offset < 0 || b_len < 0 || b_offset + b_len > (int64_t) b_cap) {
+    err = js_throw_range_error(env, NULL, "Buffer out of range");
+    assert(err == 0);
+
+    return NULL;
+  }
+
+  if (a_len != b_len) {
+    err = js_throw_range_error(env, NULL, "Input buffers must have the same byte length");
+    assert(err == 0);
+
+    return NULL;
+  }
+
+  js_value_t *result;
+  err = js_get_boolean(env, CRYPTO_memcmp(&a[a_offset], &b[b_offset], a_len) == 0, &result);
+  assert(err == 0);
+
+  return result;
+}
+
+static js_value_t *
 bare_crypto_exports(js_env_t *env, js_value_t *exports) {
   int err;
 
@@ -1717,6 +1783,8 @@ bare_crypto_exports(js_env_t *env, js_value_t *exports) {
   V("randomFill", bare_crypto_random_fill)
 
   V("pbkdf2", bare_crypto_pbkdf2);
+
+  V("timingSafeEqual", bare_crypto_timing_safe_equal);
 #undef V
 
 #define V(name, n) \
