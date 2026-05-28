@@ -8,6 +8,7 @@ import { randomBytes, randomFill, randomUUID } from './lib/random'
 import pbkdf2 from './lib/pbkdf2'
 import { generateKeyPair } from './lib/key'
 import { sign, verify } from './lib/signature'
+import { timingSafeEqual } from './lib/timing'
 import web from './web'
 
 declare function createHash(algorithm: HashAlgorithm | number, opts?: TransformOptions<Hash>): Hash
@@ -65,5 +66,6 @@ export {
   generateKeyPair,
   sign,
   verify,
+  timingSafeEqual,
   web as webcrypto
 }
