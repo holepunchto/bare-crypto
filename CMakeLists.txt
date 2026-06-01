@@ -17,6 +17,8 @@ else()
   enable_language(ASM)
 endif()
 
+set(BUILD_TESTING OFF)
+
 fetch_package("github:google/boringssl#0.20260211.0")
 
 add_bare_module(bare_crypto)
