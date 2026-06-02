@@ -25,15 +25,9 @@ test('pbkdf2, type guards', (t) => {
 test('pbkdf2, iterations out of range', (t) => {
   t.plan(3)
 
-  t.exception.all(
-    () => crypto.pbkdf2('secret', 'salt', 0, 64, 'sha512'),
-    /Invalid iterations/
-  )
+  t.exception.all(() => crypto.pbkdf2('secret', 'salt', 0, 64, 'sha512'), /Invalid iterations/)
 
-  t.exception.all(
-    () => crypto.pbkdf2('secret', 'salt', -1, 64, 'sha512'),
-    /Invalid iterations/
-  )
+  t.exception.all(() => crypto.pbkdf2('secret', 'salt', -1, 64, 'sha512'), /Invalid iterations/)
 
   t.exception.all(
     () => crypto.pbkdf2('secret', 'salt', 0x100000000, 64, 'sha512'),
@@ -44,15 +38,9 @@ test('pbkdf2, iterations out of range', (t) => {
 test('pbkdf2, key length out of range', (t) => {
   t.plan(3)
 
-  t.exception.all(
-    () => crypto.pbkdf2('secret', 'salt', 100000, 0, 'sha512'),
-    /Invalid key length/
-  )
+  t.exception.all(() => crypto.pbkdf2('secret', 'salt', 100000, 0, 'sha512'), /Invalid key length/)
 
-  t.exception.all(
-    () => crypto.pbkdf2('secret', 'salt', 100000, -1, 'sha512'),
-    /Invalid key length/
-  )
+  t.exception.all(() => crypto.pbkdf2('secret', 'salt', 100000, -1, 'sha512'), /Invalid key length/)
 
   t.exception.all(
     () => crypto.pbkdf2('secret', 'salt', 100000, 0x80000000, 'sha512'),
