@@ -37,10 +37,7 @@ test('ed25519, signing with destroyed key throws', (t) => {
 
   privateKey.destroy()
 
-  t.exception(
-    () => crypto.sign(null, Buffer.from('hello'), privateKey),
-    /Key has been destroyed/
-  )
+  t.exception(() => crypto.sign(null, Buffer.from('hello'), privateKey), /Key has been destroyed/)
 })
 
 test('ed25519, verifying with destroyed key throws', (t) => {
@@ -51,10 +48,7 @@ test('ed25519, verifying with destroyed key throws', (t) => {
 
   publicKey.destroy()
 
-  t.exception(
-    () => crypto.verify(null, data, publicKey, signature),
-    /Key has been destroyed/
-  )
+  t.exception(() => crypto.verify(null, data, publicKey, signature), /Key has been destroyed/)
 })
 
 test('ed25519, using disposes key', (t) => {
