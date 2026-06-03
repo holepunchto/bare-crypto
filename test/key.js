@@ -32,6 +32,31 @@ test('ed25519, destroy is idempotent', (t) => {
   t.is(privateKey.destroyed, true)
 })
 
+test('ed25519, signing with destroyed key throws', (t) => {
+  const { privateKey } = crypto.generateKeyPair('ed25519')
+
+  privateKey.destroy()
+
+  t.exception(
+    () => crypto.sign(null, Buffer.from('hello'), privateKey),
+    /Key has been destroyed/
+  )
+})
+
+test('ed25519, verifying with destroyed key throws', (t) => {
+  const { publicKey, privateKey } = crypto.generateKeyPair('ed25519')
+
+  const data = Buffer.from('hello')
+  const signature = crypto.sign(null, data, privateKey)
+
+  publicKey.destroy()
+
+  t.exception(
+    () => crypto.verify(null, data, publicKey, signature),
+    /Key has been destroyed/
+  )
+})
+
 test('ed25519, using disposes key', (t) => {
   let key
 

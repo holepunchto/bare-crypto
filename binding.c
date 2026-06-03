@@ -1398,7 +1398,14 @@ bare_crypto_ed25519_sign(js_env_t *env, js_callback_info_t *info) {
   err = js_unwrap(env, argv[3], (void **) &private_key);
   assert(err == 0);
 
-  if (private_key->data == NULL || private_key->len < ED25519_PRIVATE_KEY_LEN) {
+  if (private_key->data == NULL) {
+    err = js_throw_error(env, NULL, "Key has been destroyed");
+    assert(err == 0);
+
+    return NULL;
+  }
+
+  if (private_key->len < ED25519_PRIVATE_KEY_LEN) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -1469,7 +1476,14 @@ bare_crypto_ed25519_verify(js_env_t *env, js_callback_info_t *info) {
   err = js_unwrap(env, argv[5], (void **) &public_key);
   assert(err == 0);
 
-  if (public_key->data == NULL || public_key->len < ED25519_PUBLIC_KEY_LEN) {
+  if (public_key->data == NULL) {
+    err = js_throw_error(env, NULL, "Key has been destroyed");
+    assert(err == 0);
+
+    return NULL;
+  }
+
+  if (public_key->len < ED25519_PUBLIC_KEY_LEN) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -1499,7 +1513,14 @@ bare_crypto_ed25519_to_spki(js_env_t *env, js_callback_info_t *info) {
   err = js_unwrap(env, argv[0], (void **) &public_key);
   assert(err == 0);
 
-  if (public_key->data == NULL || public_key->len < ED25519_PUBLIC_KEY_LEN) {
+  if (public_key->data == NULL) {
+    err = js_throw_error(env, NULL, "Key has been destroyed");
+    assert(err == 0);
+
+    return NULL;
+  }
+
+  if (public_key->len < ED25519_PUBLIC_KEY_LEN) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -1616,7 +1637,14 @@ bare_crypto_ed25519_to_pkcs8(js_env_t *env, js_callback_info_t *info) {
   err = js_unwrap(env, argv[0], (void **) &private_key);
   assert(err == 0);
 
-  if (private_key->data == NULL || private_key->len < ED25519_PRIVATE_KEY_LEN) {
+  if (private_key->data == NULL) {
+    err = js_throw_error(env, NULL, "Key has been destroyed");
+    assert(err == 0);
+
+    return NULL;
+  }
+
+  if (private_key->len < ED25519_PRIVATE_KEY_LEN) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
