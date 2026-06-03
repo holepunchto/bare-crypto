@@ -377,11 +377,10 @@ test('subtle, destroy zeroes hmac key', async (t) => {
 })
 
 test('subtle, destroy delegates for ed25519 key', async (t) => {
-  const { privateKey } = await webcrypto.subtle.generateKey(
-    { name: 'Ed25519' },
-    false,
-    ['sign', 'verify']
-  )
+  const { privateKey } = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, false, [
+    'sign',
+    'verify'
+  ])
 
   const inner = privateKey._handle
 
