@@ -357,3 +357,67 @@ test('subtle, digest sha256', async (t) => {
     'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9'
   )
 })
+
+test('subtle, destroy zeroes hmac key', async (t) => {
+  const key = await webcrypto.subtle.generateKey(
+    { name: 'HMAC', hash: 'SHA-256', length: 256 },
+    true,
+    ['sign']
+  )
+
+  const inner = key._handle
+
+  t.is(inner.destroyed, false)
+  t.ok(inner.export().some((b) => b !== 0))
+
+  key.destroy()
+
+  t.is(key.destroyed, true)
+  t.is(inner.destroyed, true)
+})
+
+test('subtle, destroy delegates for ed25519 key', async (t) => {
+  const { privateKey } = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, false, [
+    'sign',
+    'verify'
+  ])
+
+  const inner = privateKey._handle
+
+  t.is(typeof inner.destroy, 'function')
+  t.is(inner.destroyed, false)
+
+  privateKey.destroy()
+
+  t.is(privateKey.destroyed, true)
+  t.is(inner.destroyed, true)
+})
+
+test('subtle, destroy is idempotent', async (t) => {
+  const key = await webcrypto.subtle.generateKey(
+    { name: 'HMAC', hash: 'SHA-256', length: 256 },
+    true,
+    ['sign']
+  )
+
+  key.destroy()
+  key.destroy()
+
+  t.is(key.destroyed, true)
+})
+
+test('subtle, using disposes key', async (t) => {
+  const key = await webcrypto.subtle.generateKey(
+    { name: 'HMAC', hash: 'SHA-256', length: 256 },
+    true,
+    ['sign']
+  )
+
+  {
+    using k = key
+
+    t.is(k.destroyed, false)
+  }
+
+  t.is(key.destroyed, true)
+})
