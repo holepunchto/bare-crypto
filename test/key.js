@@ -11,3 +11,38 @@ test('generateKeyPair, ed25519', (t) => {
 test('type guards', (t) => {
   t.exception(() => crypto.generateKeyPair(NaN), /AssertionError/)
 })
+
+test('ed25519, destroy zeroes private key', (t) => {
+  const { privateKey } = crypto.generateKeyPair('ed25519')
+
+  const before = new Uint8Array(privateKey.export())
+
+  t.ok(before.some((b) => b !== 0))
+
+  privateKey.destroy()
+
+  t.is(privateKey.destroyed, true)
+  t.exception(() => privateKey.export(), /Key has been destroyed/)
+})
+
+test('ed25519, destroy is idempotent', (t) => {
+  const { privateKey } = crypto.generateKeyPair('ed25519')
+
+  privateKey.destroy()
+  privateKey.destroy()
+
+  t.is(privateKey.destroyed, true)
+})
+
+test('ed25519, using disposes key', (t) => {
+  let key
+
+  {
+    using privateKey = crypto.generateKeyPair('ed25519').privateKey
+
+    key = privateKey
+    t.ok(new Uint8Array(key.export()).some((b) => b !== 0))
+  }
+
+  t.is(key.destroyed, true)
+})

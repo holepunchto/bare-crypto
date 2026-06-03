@@ -15,6 +15,8 @@
 #include <openssl/rand.h>
 #include <openssl/ripemd.h>
 #include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -89,6 +91,11 @@ typedef struct {
   EVP_AEAD_CTX context;
 } bare_crypto_aead_t;
 
+typedef struct {
+  uint8_t *data;
+  size_t len;
+} bare_crypto_key_t;
+
 static inline const EVP_MD *
 bare_crypto__to_digest(js_env_t *env, int type) {
   int err;
@@ -162,6 +169,157 @@ bare_crypto__to_aead(js_env_t *env, int type) {
 
     return NULL;
   }
+}
+
+static void
+bare_crypto__key_set(bare_crypto_key_t *key, size_t len) {
+  if (key->data != NULL) {
+    OPENSSL_cleanse(key->data, key->len);
+    free(key->data);
+  }
+
+  key->len = len;
+  key->data = malloc(len);
+}
+
+static void
+bare_crypto_key_finalize(js_env_t *env, void *data, void *hint) {
+  bare_crypto_key_t *key = data;
+
+  if (key->data != NULL) {
+    OPENSSL_cleanse(key->data, key->len);
+    free(key->data);
+  }
+
+  free(key);
+}
+
+static js_value_t *
+bare_crypto_key_init(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 4;
+  js_value_t *argv[4];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 4);
+
+  uint8_t *buffer;
+  size_t buffer_cap;
+  err = js_get_arraybuffer_info(env, argv[1], (void **) &buffer, &buffer_cap);
+  assert(err == 0);
+
+  int64_t offset;
+  err = js_get_value_int64(env, argv[2], &offset);
+  assert(err == 0);
+
+  int64_t len;
+  err = js_get_value_int64(env, argv[3], &len);
+  assert(err == 0);
+
+  if (offset < 0 || len < 0 || offset + len > (int64_t) buffer_cap) {
+    err = js_throw_range_error(env, NULL, "Buffer out of range");
+    assert(err == 0);
+
+    return NULL;
+  }
+
+  bare_crypto_key_t *key = malloc(sizeof(bare_crypto_key_t));
+
+  key->len = len;
+  key->data = malloc(len);
+
+  memcpy(key->data, &buffer[offset], len);
+
+  err = js_wrap(env, argv[0], key, bare_crypto_key_finalize, NULL, NULL);
+  assert(err == 0);
+
+  return NULL;
+}
+
+static js_value_t *
+bare_crypto_key_export(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  bare_crypto_key_t *key;
+  err = js_unwrap(env, argv[0], (void **) &key);
+  assert(err == 0);
+
+  if (key->data == NULL) {
+    err = js_throw_error(env, NULL, "Key has been destroyed");
+    assert(err == 0);
+
+    return NULL;
+  }
+
+  js_value_t *result;
+
+  uint8_t *out;
+  err = js_create_arraybuffer(env, key->len, (void **) &out, &result);
+  assert(err == 0);
+
+  memcpy(out, key->data, key->len);
+
+  return result;
+}
+
+static js_value_t *
+bare_crypto_key_destroy(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  bare_crypto_key_t *key;
+  err = js_unwrap(env, argv[0], (void **) &key);
+  assert(err == 0);
+
+  if (key->data != NULL) {
+    OPENSSL_cleanse(key->data, key->len);
+    free(key->data);
+    key->data = NULL;
+    key->len = 0;
+  }
+
+  return NULL;
+}
+
+static js_value_t *
+bare_crypto_key_length(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  bare_crypto_key_t *key;
+  err = js_unwrap(env, argv[0], (void **) &key);
+  assert(err == 0);
+
+  js_value_t *result;
+  err = js_create_uint32(env, key->len, &result);
+  assert(err == 0);
+
+  return result;
 }
 
 static js_value_t *
@@ -355,33 +513,42 @@ bare_crypto_ripemd160_final(js_env_t *env, js_callback_info_t *info) {
   return result;
 }
 
+static void
+bare_crypto_hmac_finalize(js_env_t *env, void *data, void *hint) {
+  bare_crypto_hmac_t *hmac = data;
+
+  HMAC_CTX_cleanup(&hmac->context);
+
+  free(hmac);
+}
+
 static js_value_t *
 bare_crypto_hmac_init(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  size_t argc = 4;
-  js_value_t *argv[4];
+  size_t argc = 5;
+  js_value_t *argv[5];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
 
-  assert(argc == 4);
+  assert(argc == 5);
 
   uint32_t type;
-  err = js_get_value_uint32(env, argv[0], &type);
+  err = js_get_value_uint32(env, argv[1], &type);
   assert(err == 0);
 
   uint8_t *key;
   size_t key_cap;
-  err = js_get_arraybuffer_info(env, argv[1], (void **) &key, &key_cap);
+  err = js_get_arraybuffer_info(env, argv[2], (void **) &key, &key_cap);
   assert(err == 0);
 
   int64_t offset;
-  err = js_get_value_int64(env, argv[2], &offset);
+  err = js_get_value_int64(env, argv[3], &offset);
   assert(err == 0);
 
   int64_t len;
-  err = js_get_value_int64(env, argv[3], &len);
+  err = js_get_value_int64(env, argv[4], &len);
   assert(err == 0);
 
   if (offset < 0 || len < 0 || offset + len > (int64_t) key_cap) {
@@ -395,18 +562,17 @@ bare_crypto_hmac_init(js_env_t *env, js_callback_info_t *info) {
 
   if (algorithm == NULL) return NULL;
 
-  js_value_t *handle;
-
-  bare_crypto_hmac_t *hmac;
-  err = js_create_arraybuffer(env, sizeof(bare_crypto_hmac_t), (void **) &hmac, &handle);
-  assert(err == 0);
+  bare_crypto_hmac_t *hmac = malloc(sizeof(bare_crypto_hmac_t));
 
   HMAC_CTX_init(&hmac->context);
 
   err = HMAC_Init_ex(&hmac->context, &key[offset], len, algorithm, NULL);
   assert(err == 1);
 
-  return handle;
+  err = js_wrap(env, argv[0], hmac, bare_crypto_hmac_finalize, NULL, NULL);
+  assert(err == 0);
+
+  return NULL;
 }
 
 static js_value_t *
@@ -422,7 +588,7 @@ bare_crypto_hmac_update(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 4);
 
   bare_crypto_hmac_t *hmac;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &hmac, NULL);
+  err = js_unwrap(env, argv[0], (void **) &hmac);
   assert(err == 0);
 
   uint8_t *data;
@@ -464,7 +630,7 @@ bare_crypto_hmac_final(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 1);
 
   bare_crypto_hmac_t *hmac;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &hmac, NULL);
+  err = js_unwrap(env, argv[0], (void **) &hmac);
   assert(err == 0);
 
   js_value_t *result;
@@ -550,7 +716,7 @@ bare_crypto_cipher_block_size(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 1);
 
   bare_crypto_cipher_t *cipher;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &cipher, NULL);
+  err = js_unwrap(env, argv[0], (void **) &cipher);
   assert(err == 0);
 
   js_value_t *result;
@@ -560,33 +726,42 @@ bare_crypto_cipher_block_size(js_env_t *env, js_callback_info_t *info) {
   return result;
 }
 
+static void
+bare_crypto_cipher_finalize(js_env_t *env, void *data, void *hint) {
+  bare_crypto_cipher_t *cipher = data;
+
+  EVP_CIPHER_CTX_cleanup(&cipher->context);
+
+  free(cipher);
+}
+
 static js_value_t *
 bare_crypto_cipher_init(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  size_t argc = 8;
-  js_value_t *argv[8];
+  size_t argc = 9;
+  js_value_t *argv[9];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
 
-  assert(argc == 8);
+  assert(argc == 9);
 
   uint32_t type;
-  err = js_get_value_uint32(env, argv[0], &type);
+  err = js_get_value_uint32(env, argv[1], &type);
   assert(err == 0);
 
   uint8_t *key;
   size_t key_cap;
-  err = js_get_arraybuffer_info(env, argv[1], (void **) &key, &key_cap);
+  err = js_get_arraybuffer_info(env, argv[2], (void **) &key, &key_cap);
   assert(err == 0);
 
   int64_t key_offset;
-  err = js_get_value_int64(env, argv[2], &key_offset);
+  err = js_get_value_int64(env, argv[3], &key_offset);
   assert(err == 0);
 
   int64_t key_len;
-  err = js_get_value_int64(env, argv[3], &key_len);
+  err = js_get_value_int64(env, argv[4], &key_len);
   assert(err == 0);
 
   if (key_offset < 0 || key_len < 0 || key_offset + key_len > (int64_t) key_cap) {
@@ -598,15 +773,15 @@ bare_crypto_cipher_init(js_env_t *env, js_callback_info_t *info) {
 
   uint8_t *iv;
   size_t iv_cap;
-  err = js_get_arraybuffer_info(env, argv[4], (void **) &iv, &iv_cap);
+  err = js_get_arraybuffer_info(env, argv[5], (void **) &iv, &iv_cap);
   assert(err == 0);
 
   int64_t iv_offset;
-  err = js_get_value_int64(env, argv[5], &iv_offset);
+  err = js_get_value_int64(env, argv[6], &iv_offset);
   assert(err == 0);
 
   int64_t iv_len;
-  err = js_get_value_int64(env, argv[6], &iv_len);
+  err = js_get_value_int64(env, argv[7], &iv_len);
   assert(err == 0);
 
   if (iv_offset < 0 || iv_len < 0 || iv_offset + iv_len > (int64_t) iv_cap) {
@@ -617,23 +792,22 @@ bare_crypto_cipher_init(js_env_t *env, js_callback_info_t *info) {
   }
 
   bool encrypt;
-  err = js_get_value_bool(env, argv[7], &encrypt);
-  assert(err == 0);
-
-  js_value_t *handle;
-
-  bare_crypto_cipher_t *cipher;
-  err = js_create_arraybuffer(env, sizeof(bare_crypto_cipher_t), (void **) &cipher, &handle);
+  err = js_get_value_bool(env, argv[8], &encrypt);
   assert(err == 0);
 
   const EVP_CIPHER *algorithm = bare_crypto__to_cipher(env, type);
 
   if (algorithm == NULL) return NULL;
 
+  bare_crypto_cipher_t *cipher = malloc(sizeof(bare_crypto_cipher_t));
+
   err = EVP_CipherInit(&cipher->context, algorithm, &key[key_offset], &iv[iv_offset], encrypt);
   assert(err == 1);
 
-  return handle;
+  err = js_wrap(env, argv[0], cipher, bare_crypto_cipher_finalize, NULL, NULL);
+  assert(err == 0);
+
+  return NULL;
 }
 
 static js_value_t *
@@ -649,7 +823,7 @@ bare_crypto_cipher_update(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 5);
 
   bare_crypto_cipher_t *cipher;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &cipher, NULL);
+  err = js_unwrap(env, argv[0], (void **) &cipher);
   assert(err == 0);
 
   uint8_t *data;
@@ -708,7 +882,7 @@ bare_crypto_cipher_final(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 2);
 
   bare_crypto_cipher_t *cipher;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &cipher, NULL);
+  err = js_unwrap(env, argv[0], (void **) &cipher);
   assert(err == 0);
 
   uint8_t *out;
@@ -755,7 +929,7 @@ bare_crypto_cipher_set_padding(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 2);
 
   bare_crypto_cipher_t *cipher;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &cipher, NULL);
+  err = js_unwrap(env, argv[0], (void **) &cipher);
   assert(err == 0);
 
   bool pad;
@@ -835,7 +1009,7 @@ bare_crypto_aead_max_overhead(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 1);
 
   bare_crypto_aead_t *aead;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &aead, NULL);
+  err = js_unwrap(env, argv[0], (void **) &aead);
   assert(err == 0);
 
   js_value_t *result;
@@ -858,7 +1032,7 @@ bare_crypto_aead_max_tag_length(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 1);
 
   bare_crypto_aead_t *aead;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &aead, NULL);
+  err = js_unwrap(env, argv[0], (void **) &aead);
   assert(err == 0);
 
   js_value_t *result;
@@ -868,33 +1042,42 @@ bare_crypto_aead_max_tag_length(js_env_t *env, js_callback_info_t *info) {
   return result;
 }
 
+static void
+bare_crypto_aead_finalize(js_env_t *env, void *data, void *hint) {
+  bare_crypto_aead_t *aead = data;
+
+  EVP_AEAD_CTX_cleanup(&aead->context);
+
+  free(aead);
+}
+
 static js_value_t *
 bare_crypto_aead_init(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  size_t argc = 5;
-  js_value_t *argv[5];
+  size_t argc = 6;
+  js_value_t *argv[6];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
 
-  assert(argc == 5);
+  assert(argc == 6);
 
   uint32_t type;
-  err = js_get_value_uint32(env, argv[0], &type);
+  err = js_get_value_uint32(env, argv[1], &type);
   assert(err == 0);
 
   uint8_t *key;
   size_t key_cap;
-  err = js_get_arraybuffer_info(env, argv[1], (void **) &key, &key_cap);
+  err = js_get_arraybuffer_info(env, argv[2], (void **) &key, &key_cap);
   assert(err == 0);
 
   int64_t key_offset;
-  err = js_get_value_int64(env, argv[2], &key_offset);
+  err = js_get_value_int64(env, argv[3], &key_offset);
   assert(err == 0);
 
   int64_t key_len;
-  err = js_get_value_int64(env, argv[3], &key_len);
+  err = js_get_value_int64(env, argv[4], &key_len);
   assert(err == 0);
 
   if (key_offset < 0 || key_len < 0 || key_offset + key_len > (int64_t) key_cap) {
@@ -905,23 +1088,24 @@ bare_crypto_aead_init(js_env_t *env, js_callback_info_t *info) {
   }
 
   int64_t tag_len;
-  err = js_get_value_int64(env, argv[4], &tag_len);
-  assert(err == 0);
-
-  js_value_t *handle;
-
-  bare_crypto_aead_t *aead;
-  err = js_create_arraybuffer(env, sizeof(bare_crypto_aead_t), (void **) &aead, &handle);
+  err = js_get_value_int64(env, argv[5], &tag_len);
   assert(err == 0);
 
   const EVP_AEAD *algorithm = bare_crypto__to_aead(env, type);
 
   if (algorithm == NULL) return NULL;
 
+  bare_crypto_aead_t *aead = malloc(sizeof(bare_crypto_aead_t));
+
+  EVP_AEAD_CTX_zero(&aead->context);
+
   err = EVP_AEAD_CTX_init(&aead->context, algorithm, &key[key_offset], key_len, tag_len, NULL);
   assert(err == 1);
 
-  return handle;
+  err = js_wrap(env, argv[0], aead, bare_crypto_aead_finalize, NULL, NULL);
+  assert(err == 0);
+
+  return NULL;
 }
 
 static js_value_t *
@@ -937,7 +1121,7 @@ bare_crypto_aead_seal(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 11);
 
   bare_crypto_aead_t *aead;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &aead, NULL);
+  err = js_unwrap(env, argv[0], (void **) &aead);
   assert(err == 0);
 
   uint8_t *data;
@@ -1048,7 +1232,7 @@ bare_crypto_aead_open(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 11);
 
   bare_crypto_aead_t *aead;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &aead, NULL);
+  err = js_unwrap(env, argv[0], (void **) &aead);
   assert(err == 0);
 
   uint8_t *data;
@@ -1150,29 +1334,28 @@ static js_value_t *
 bare_crypto_ed25519_generate_keypair(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  js_value_t *result;
-  err = js_create_object(env, &result);
+  size_t argc = 2;
+  js_value_t *argv[2];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
 
-  js_value_t *handle;
+  assert(argc == 2);
 
-  uint8_t *public_key;
-  err = js_create_arraybuffer(env, ED25519_PUBLIC_KEY_LEN, (void **) &public_key, &handle);
+  bare_crypto_key_t *public_key;
+  err = js_unwrap(env, argv[0], (void **) &public_key);
   assert(err == 0);
 
-  err = js_set_named_property(env, result, "publicKey", handle);
+  bare_crypto_key_t *private_key;
+  err = js_unwrap(env, argv[1], (void **) &private_key);
   assert(err == 0);
 
-  uint8_t *private_key;
-  err = js_create_arraybuffer(env, ED25519_PRIVATE_KEY_LEN, (void **) &private_key, &handle);
-  assert(err == 0);
+  bare_crypto__key_set(public_key, ED25519_PUBLIC_KEY_LEN);
+  bare_crypto__key_set(private_key, ED25519_PRIVATE_KEY_LEN);
 
-  err = js_set_named_property(env, result, "privateKey", handle);
-  assert(err == 0);
+  ED25519_keypair(public_key->data, private_key->data);
 
-  ED25519_keypair(public_key, private_key);
-
-  return result;
+  return NULL;
 }
 
 static js_value_t *
@@ -1207,12 +1390,11 @@ bare_crypto_ed25519_sign(js_env_t *env, js_callback_info_t *info) {
     return NULL;
   }
 
-  uint8_t *private_key;
-  size_t private_key_cap;
-  err = js_get_arraybuffer_info(env, argv[3], (void **) &private_key, &private_key_cap);
+  bare_crypto_key_t *private_key;
+  err = js_unwrap(env, argv[3], (void **) &private_key);
   assert(err == 0);
 
-  if (private_key_cap < ED25519_PRIVATE_KEY_LEN) {
+  if (private_key->data == NULL || private_key->len < ED25519_PRIVATE_KEY_LEN) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -1225,7 +1407,7 @@ bare_crypto_ed25519_sign(js_env_t *env, js_callback_info_t *info) {
   err = js_create_arraybuffer(env, ED25519_SIGNATURE_LEN, (void **) &signature, &handle);
   assert(err == 0);
 
-  err = ED25519_sign(signature, &data[offset], len, private_key);
+  err = ED25519_sign(signature, &data[offset], len, private_key->data);
   assert(err == 1);
 
   return handle;
@@ -1279,12 +1461,11 @@ bare_crypto_ed25519_verify(js_env_t *env, js_callback_info_t *info) {
     return NULL;
   }
 
-  uint8_t *public_key;
-  size_t public_key_cap;
-  err = js_get_arraybuffer_info(env, argv[5], (void **) &public_key, &public_key_cap);
+  bare_crypto_key_t *public_key;
+  err = js_unwrap(env, argv[5], (void **) &public_key);
   assert(err == 0);
 
-  if (public_key_cap < ED25519_PUBLIC_KEY_LEN) {
+  if (public_key->data == NULL || public_key->len < ED25519_PUBLIC_KEY_LEN) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -1292,7 +1473,7 @@ bare_crypto_ed25519_verify(js_env_t *env, js_callback_info_t *info) {
   }
 
   js_value_t *result;
-  err = js_get_boolean(env, ED25519_verify(&data[data_offset], data_len, &signature[signature_offset], public_key), &result);
+  err = js_get_boolean(env, ED25519_verify(&data[data_offset], data_len, &signature[signature_offset], public_key->data), &result);
   assert(err == 0);
 
   return result;
@@ -1310,19 +1491,18 @@ bare_crypto_ed25519_to_spki(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  uint8_t *public_key;
-  size_t public_key_cap;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &public_key, &public_key_cap);
+  bare_crypto_key_t *public_key;
+  err = js_unwrap(env, argv[0], (void **) &public_key);
   assert(err == 0);
 
-  if (public_key_cap < ED25519_PUBLIC_KEY_LEN) {
+  if (public_key->data == NULL || public_key->len < ED25519_PUBLIC_KEY_LEN) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
     return NULL;
   }
 
-  EVP_PKEY *pkey = EVP_PKEY_new_raw_public_key(EVP_PKEY_ED25519, NULL, public_key, 32);
+  EVP_PKEY *pkey = EVP_PKEY_new_raw_public_key(EVP_PKEY_ED25519, NULL, public_key->data, 32);
 
   CBB bytes;
   err = CBB_init(&bytes, 0);
@@ -1355,25 +1535,29 @@ static js_value_t *
 bare_crypto_ed25519_from_spki(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  size_t argc = 3;
-  js_value_t *argv[3];
+  size_t argc = 4;
+  js_value_t *argv[4];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
 
-  assert(argc == 3);
+  assert(argc == 4);
+
+  bare_crypto_key_t *public_key;
+  err = js_unwrap(env, argv[0], (void **) &public_key);
+  assert(err == 0);
 
   uint8_t *der;
   size_t der_cap;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &der, &der_cap);
+  err = js_get_arraybuffer_info(env, argv[1], (void **) &der, &der_cap);
   assert(err == 0);
 
   int64_t offset;
-  err = js_get_value_int64(env, argv[1], &offset);
+  err = js_get_value_int64(env, argv[2], &offset);
   assert(err == 0);
 
   int64_t len;
-  err = js_get_value_int64(env, argv[2], &len);
+  err = js_get_value_int64(env, argv[3], &len);
   assert(err == 0);
 
   if (offset < 0 || len < 0 || offset + len > (int64_t) der_cap) {
@@ -1395,14 +1579,10 @@ bare_crypto_ed25519_from_spki(js_env_t *env, js_callback_info_t *info) {
     return NULL;
   }
 
-  js_value_t *handle;
-
-  uint8_t *public_key;
-  err = js_create_arraybuffer(env, ED25519_PUBLIC_KEY_LEN, (void **) &public_key, &handle);
-  assert(err == 0);
+  bare_crypto__key_set(public_key, ED25519_PUBLIC_KEY_LEN);
 
   size_t written = ED25519_PUBLIC_KEY_LEN;
-  err = EVP_PKEY_get_raw_public_key(pkey, public_key, &written);
+  err = EVP_PKEY_get_raw_public_key(pkey, public_key->data, &written);
 
   EVP_PKEY_free(pkey);
 
@@ -1413,7 +1593,7 @@ bare_crypto_ed25519_from_spki(js_env_t *env, js_callback_info_t *info) {
     return NULL;
   }
 
-  return handle;
+  return NULL;
 }
 
 static js_value_t *
@@ -1428,19 +1608,18 @@ bare_crypto_ed25519_to_pkcs8(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  uint8_t *private_key;
-  size_t private_key_cap;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &private_key, &private_key_cap);
+  bare_crypto_key_t *private_key;
+  err = js_unwrap(env, argv[0], (void **) &private_key);
   assert(err == 0);
 
-  if (private_key_cap < ED25519_PRIVATE_KEY_LEN) {
+  if (private_key->data == NULL || private_key->len < ED25519_PRIVATE_KEY_LEN) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
     return NULL;
   }
 
-  EVP_PKEY *pkey = EVP_PKEY_new_raw_private_key(EVP_PKEY_ED25519, NULL, private_key, 32);
+  EVP_PKEY *pkey = EVP_PKEY_new_raw_private_key(EVP_PKEY_ED25519, NULL, private_key->data, 32);
 
   CBB bytes;
   err = CBB_init(&bytes, 0);
@@ -1474,25 +1653,29 @@ static js_value_t *
 bare_crypto_ed25519_from_pkcs8(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  size_t argc = 3;
-  js_value_t *argv[3];
+  size_t argc = 4;
+  js_value_t *argv[4];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
 
-  assert(argc == 3);
+  assert(argc == 4);
+
+  bare_crypto_key_t *private_key;
+  err = js_unwrap(env, argv[0], (void **) &private_key);
+  assert(err == 0);
 
   uint8_t *der;
   size_t der_cap;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &der, &der_cap);
+  err = js_get_arraybuffer_info(env, argv[1], (void **) &der, &der_cap);
   assert(err == 0);
 
   int64_t offset;
-  err = js_get_value_int64(env, argv[1], &offset);
+  err = js_get_value_int64(env, argv[2], &offset);
   assert(err == 0);
 
   int64_t len;
-  err = js_get_value_int64(env, argv[2], &len);
+  err = js_get_value_int64(env, argv[3], &len);
   assert(err == 0);
 
   if (offset < 0 || len < 0 || offset + len > (int64_t) der_cap) {
@@ -1514,14 +1697,10 @@ bare_crypto_ed25519_from_pkcs8(js_env_t *env, js_callback_info_t *info) {
     return NULL;
   }
 
-  js_value_t *handle;
-
-  uint8_t *private_key;
-  err = js_create_arraybuffer(env, ED25519_PRIVATE_KEY_LEN, (void **) &private_key, &handle);
-  assert(err == 0);
+  bare_crypto__key_set(private_key, ED25519_PRIVATE_KEY_LEN);
 
   size_t written = ED25519_PRIVATE_KEY_LEN;
-  err = EVP_PKEY_get_raw_private_key(pkey, private_key, &written);
+  err = EVP_PKEY_get_raw_private_key(pkey, private_key->data, &written);
 
   if (err != 1) {
     EVP_PKEY_free(pkey);
@@ -1533,7 +1712,7 @@ bare_crypto_ed25519_from_pkcs8(js_env_t *env, js_callback_info_t *info) {
   }
 
   written = ED25519_PUBLIC_KEY_LEN;
-  err = EVP_PKEY_get_raw_public_key(pkey, &private_key[32], &written);
+  err = EVP_PKEY_get_raw_public_key(pkey, &private_key->data[32], &written);
 
   EVP_PKEY_free(pkey);
 
@@ -1544,7 +1723,7 @@ bare_crypto_ed25519_from_pkcs8(js_env_t *env, js_callback_info_t *info) {
     return NULL;
   }
 
-  return handle;
+  return NULL;
 }
 
 static js_value_t *
@@ -1745,6 +1924,11 @@ bare_crypto_exports(js_env_t *env, js_value_t *exports) {
     err = js_set_named_property(env, exports, name, val); \
     assert(err == 0); \
   }
+
+  V("keyInit", bare_crypto_key_init)
+  V("keyExport", bare_crypto_key_export)
+  V("keyDestroy", bare_crypto_key_destroy)
+  V("keyLength", bare_crypto_key_length)
 
   V("digestInit", bare_crypto_digest_init)
   V("digestUpdate", bare_crypto_digest_update)
