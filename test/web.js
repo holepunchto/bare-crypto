@@ -368,7 +368,7 @@ test('subtle, destroy zeroes hmac key', async (t) => {
   const inner = key._handle
 
   t.is(inner.destroyed, false)
-  t.ok(new Uint8Array(inner.export()).some((b) => b !== 0))
+  t.ok(inner.export().some((b) => b !== 0))
 
   key.destroy()
 

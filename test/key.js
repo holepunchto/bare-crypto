@@ -15,9 +15,7 @@ test('type guards', (t) => {
 test('ed25519, destroy zeroes private key', (t) => {
   const { privateKey } = crypto.generateKeyPair('ed25519')
 
-  const before = new Uint8Array(privateKey.export())
-
-  t.ok(before.some((b) => b !== 0))
+  t.ok(privateKey.export().some((b) => b !== 0))
 
   privateKey.destroy()
 
@@ -41,7 +39,7 @@ test('ed25519, using disposes key', (t) => {
     using privateKey = crypto.generateKeyPair('ed25519').privateKey
 
     key = privateKey
-    t.ok(new Uint8Array(key.export()).some((b) => b !== 0))
+    t.ok(key.export().some((b) => b !== 0))
   }
 
   t.is(key.destroyed, true)

@@ -1,3 +1,4 @@
+import Buffer from 'bare-buffer'
 import { type SignatureAlgorithm } from './signature'
 
 declare class CryptoKey {
@@ -5,7 +6,7 @@ declare class CryptoKey {
 
   readonly destroyed: boolean
 
-  export(): ArrayBuffer
+  export(): Buffer
 
   destroy(): void
 
