@@ -175,6 +175,7 @@ static void
 bare_crypto__key_set(bare_crypto_key_t *key, size_t len) {
   if (key->data != NULL) {
     OPENSSL_cleanse(key->data, key->len);
+
     free(key->data);
   }
 
@@ -188,6 +189,7 @@ bare_crypto_key_finalize(js_env_t *env, void *data, void *hint) {
 
   if (key->data != NULL) {
     OPENSSL_cleanse(key->data, key->len);
+
     free(key->data);
   }
 
@@ -291,7 +293,9 @@ bare_crypto_key_destroy(js_env_t *env, js_callback_info_t *info) {
 
   if (key->data != NULL) {
     OPENSSL_cleanse(key->data, key->len);
+
     free(key->data);
+
     key->data = NULL;
     key->len = 0;
   }
