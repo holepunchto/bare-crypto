@@ -43,6 +43,28 @@ test('subtle, generateKey hmac, default length from hash', async (t) => {
   t.is(raw.byteLength, 64)
 })
 
+test('subtle, generateKey hmac, default length from sha-384', async (t) => {
+  const key = await webcrypto.subtle.generateKey({ name: 'HMAC', hash: 'SHA-384' }, true, ['sign'])
+
+  t.is(key.algorithm.length, 1024)
+
+  const raw = await webcrypto.subtle.exportKey('raw', key)
+  t.is(raw.byteLength, 128)
+})
+
+test('subtle, generateKey hmac, hash as object', async (t) => {
+  const key = await webcrypto.subtle.generateKey(
+    { name: 'HMAC', hash: { name: 'SHA-256' } },
+    true,
+    ['sign']
+  )
+
+  t.is(key.algorithm.length, 512)
+
+  const raw = await webcrypto.subtle.exportKey('raw', key)
+  t.is(raw.byteLength, 64)
+})
+
 test('subtle, generateKey ed25519', async (t) => {
   const key = await webcrypto.subtle.generateKey({ name: 'Ed25519' }, false, ['sign', 'verify'])
 
