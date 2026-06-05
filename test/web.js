@@ -16,6 +16,31 @@ test('subtle, generateKey hmac', async (t) => {
     hash: { name: 'SHA-256' }
   })
   t.alike(key.usages, ['sign'])
+
+  const raw = await webcrypto.subtle.exportKey('raw', key)
+  t.is(raw.byteLength, 32)
+})
+
+test('subtle, generateKey hmac, length exceeds hash output', async (t) => {
+  const key = await webcrypto.subtle.generateKey(
+    { name: 'HMAC', hash: 'SHA-256', length: 512 },
+    true,
+    ['sign']
+  )
+
+  t.is(key.algorithm.length, 512)
+
+  const raw = await webcrypto.subtle.exportKey('raw', key)
+  t.is(raw.byteLength, 64)
+})
+
+test('subtle, generateKey hmac, default length from hash', async (t) => {
+  const key = await webcrypto.subtle.generateKey({ name: 'HMAC', hash: 'SHA-256' }, true, ['sign'])
+
+  t.is(key.algorithm.length, 512)
+
+  const raw = await webcrypto.subtle.exportKey('raw', key)
+  t.is(raw.byteLength, 64)
 })
 
 test('subtle, generateKey ed25519', async (t) => {
