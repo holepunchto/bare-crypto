@@ -521,7 +521,7 @@ static void
 bare_crypto_hmac_finalize(js_env_t *env, void *data, void *hint) {
   bare_crypto_hmac_t *hmac = data;
 
-  HMAC_CTX_cleanup(&hmac->context);
+  HMAC_CTX_cleanse(&hmac->context);
 
   free(hmac);
 }
@@ -648,7 +648,7 @@ bare_crypto_hmac_final(js_env_t *env, js_callback_info_t *info) {
   err = HMAC_Final(&hmac->context, digest, NULL);
   assert(err == 1);
 
-  HMAC_CTX_cleanup(&hmac->context);
+  HMAC_CTX_cleanse(&hmac->context);
 
   return result;
 }
