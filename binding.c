@@ -221,7 +221,7 @@ bare_crypto_key_init(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[3], &len);
   assert(err == 0);
 
-  if (offset < 0 || len < 0 || offset + len > (int64_t) buffer_cap) {
+  if (offset < 0 || len < 0 || offset > (int64_t) buffer_cap || len > (int64_t) buffer_cap - offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -389,7 +389,7 @@ bare_crypto_digest_update(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[3], &len);
   assert(err == 0);
 
-  if (offset < 0 || len < 0 || offset + len > (int64_t) data_cap) {
+  if (offset < 0 || len < 0 || offset > (int64_t) data_cap || len > (int64_t) data_cap - offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -476,7 +476,7 @@ bare_crypto_ripemd160_update(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[3], &len);
   assert(err == 0);
 
-  if (offset < 0 || len < 0 || offset + len > (int64_t) data_cap) {
+  if (offset < 0 || len < 0 || offset > (int64_t) data_cap || len > (int64_t) data_cap - offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -555,7 +555,7 @@ bare_crypto_hmac_init(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[4], &len);
   assert(err == 0);
 
-  if (offset < 0 || len < 0 || offset + len > (int64_t) key_cap) {
+  if (offset < 0 || len < 0 || offset > (int64_t) key_cap || len > (int64_t) key_cap - offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -608,7 +608,7 @@ bare_crypto_hmac_update(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[3], &len);
   assert(err == 0);
 
-  if (offset < 0 || len < 0 || offset + len > (int64_t) data_cap) {
+  if (offset < 0 || len < 0 || offset > (int64_t) data_cap || len > (int64_t) data_cap - offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -768,7 +768,7 @@ bare_crypto_cipher_init(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[4], &key_len);
   assert(err == 0);
 
-  if (key_offset < 0 || key_len < 0 || key_offset + key_len > (int64_t) key_cap) {
+  if (key_offset < 0 || key_len < 0 || key_offset > (int64_t) key_cap || key_len > (int64_t) key_cap - key_offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -788,7 +788,7 @@ bare_crypto_cipher_init(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[7], &iv_len);
   assert(err == 0);
 
-  if (iv_offset < 0 || iv_len < 0 || iv_offset + iv_len > (int64_t) iv_cap) {
+  if (iv_offset < 0 || iv_len < 0 || iv_offset > (int64_t) iv_cap || iv_len > (int64_t) iv_cap - iv_offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -843,7 +843,7 @@ bare_crypto_cipher_update(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[3], &len);
   assert(err == 0);
 
-  if (offset < 0 || len < 0 || offset + len > (int64_t) data_cap) {
+  if (offset < 0 || len < 0 || offset > (int64_t) data_cap || len > (int64_t) data_cap - offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -851,8 +851,18 @@ bare_crypto_cipher_update(js_env_t *env, js_callback_info_t *info) {
   }
 
   uint8_t *out;
-  err = js_get_arraybuffer_info(env, argv[4], (void **) &out, NULL);
+  size_t out_cap;
+  err = js_get_arraybuffer_info(env, argv[4], (void **) &out, &out_cap);
   assert(err == 0);
+
+  // EVP_CipherUpdate may write up to len + block_size - 1 bytes, accounting for
+  // any partial block buffered from a previous update.
+  if (out_cap < (size_t) len + EVP_CIPHER_CTX_block_size(&cipher->context) - 1) {
+    err = js_throw_range_error(env, NULL, "Buffer out of range");
+    assert(err == 0);
+
+    return NULL;
+  }
 
   int written;
   err = EVP_CipherUpdate(&cipher->context, out, &written, &data[offset], len);
@@ -1084,7 +1094,7 @@ bare_crypto_aead_init(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[4], &key_len);
   assert(err == 0);
 
-  if (key_offset < 0 || key_len < 0 || key_offset + key_len > (int64_t) key_cap) {
+  if (key_offset < 0 || key_len < 0 || key_offset > (int64_t) key_cap || key_len > (int64_t) key_cap - key_offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -1141,7 +1151,7 @@ bare_crypto_aead_seal(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[3], &data_len);
   assert(err == 0);
 
-  if (data_offset < 0 || data_len < 0 || data_offset + data_len > (int64_t) data_cap) {
+  if (data_offset < 0 || data_len < 0 || data_offset > (int64_t) data_cap || data_len > (int64_t) data_cap - data_offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -1161,7 +1171,7 @@ bare_crypto_aead_seal(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[6], &nonce_len);
   assert(err == 0);
 
-  if (nonce_offset < 0 || nonce_len < 0 || nonce_offset + nonce_len > (int64_t) nonce_cap) {
+  if (nonce_offset < 0 || nonce_len < 0 || nonce_offset > (int64_t) nonce_cap || nonce_len > (int64_t) nonce_cap - nonce_offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -1181,7 +1191,7 @@ bare_crypto_aead_seal(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[9], &ad_len);
   assert(err == 0);
 
-  if (ad_offset < 0 || ad_len < 0 || ad_offset + ad_len > (int64_t) ad_cap) {
+  if (ad_offset < 0 || ad_len < 0 || ad_offset > (int64_t) ad_cap || ad_len > (int64_t) ad_cap - ad_offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -1252,7 +1262,7 @@ bare_crypto_aead_open(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[3], &data_len);
   assert(err == 0);
 
-  if (data_offset < 0 || data_len < 0 || data_offset + data_len > (int64_t) data_cap) {
+  if (data_offset < 0 || data_len < 0 || data_offset > (int64_t) data_cap || data_len > (int64_t) data_cap - data_offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -1272,7 +1282,7 @@ bare_crypto_aead_open(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[6], &nonce_len);
   assert(err == 0);
 
-  if (nonce_offset < 0 || nonce_len < 0 || nonce_offset + nonce_len > (int64_t) nonce_cap) {
+  if (nonce_offset < 0 || nonce_len < 0 || nonce_offset > (int64_t) nonce_cap || nonce_len > (int64_t) nonce_cap - nonce_offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -1292,7 +1302,7 @@ bare_crypto_aead_open(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[9], &ad_len);
   assert(err == 0);
 
-  if (ad_offset < 0 || ad_len < 0 || ad_offset + ad_len > (int64_t) ad_cap) {
+  if (ad_offset < 0 || ad_len < 0 || ad_offset > (int64_t) ad_cap || ad_len > (int64_t) ad_cap - ad_offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -1387,7 +1397,7 @@ bare_crypto_ed25519_sign(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[2], &len);
   assert(err == 0);
 
-  if (offset < 0 || len < 0 || offset + len > (int64_t) data_cap) {
+  if (offset < 0 || len < 0 || offset > (int64_t) data_cap || len > (int64_t) data_cap - offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -1449,7 +1459,7 @@ bare_crypto_ed25519_verify(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[2], &data_len);
   assert(err == 0);
 
-  if (data_offset < 0 || data_len < 0 || data_offset + data_len > (int64_t) data_cap) {
+  if (data_offset < 0 || data_len < 0 || data_offset > (int64_t) data_cap || data_len > (int64_t) data_cap - data_offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -1465,7 +1475,7 @@ bare_crypto_ed25519_verify(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[4], &signature_offset);
   assert(err == 0);
 
-  if (signature_offset < 0 || signature_offset + ED25519_SIGNATURE_LEN > (int64_t) signature_cap) {
+  if (signature_offset < 0 || signature_offset > (int64_t) signature_cap || ED25519_SIGNATURE_LEN > (int64_t) signature_cap - signature_offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -1585,7 +1595,7 @@ bare_crypto_ed25519_from_spki(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[3], &len);
   assert(err == 0);
 
-  if (offset < 0 || len < 0 || offset + len > (int64_t) der_cap) {
+  if (offset < 0 || len < 0 || offset > (int64_t) der_cap || len > (int64_t) der_cap - offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -1710,7 +1720,7 @@ bare_crypto_ed25519_from_pkcs8(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[3], &len);
   assert(err == 0);
 
-  if (offset < 0 || len < 0 || offset + len > (int64_t) der_cap) {
+  if (offset < 0 || len < 0 || offset > (int64_t) der_cap || len > (int64_t) der_cap - offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -1783,7 +1793,7 @@ bare_crypto_random_fill(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[2], &len);
   assert(err == 0);
 
-  if (offset < 0 || len < 0 || offset + len > (int64_t) data_cap) {
+  if (offset < 0 || len < 0 || offset > (int64_t) data_cap || len > (int64_t) data_cap - offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -1821,7 +1831,7 @@ bare_crypto_pbkdf2(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[2], &password_len);
   assert(err == 0);
 
-  if (password_offset < 0 || password_len < 0 || password_offset + password_len > (int64_t) password_cap) {
+  if (password_offset < 0 || password_len < 0 || password_offset > (int64_t) password_cap || password_len > (int64_t) password_cap - password_offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -1841,7 +1851,7 @@ bare_crypto_pbkdf2(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[5], &salt_len);
   assert(err == 0);
 
-  if (salt_offset < 0 || salt_len < 0 || salt_offset + salt_len > (int64_t) salt_cap) {
+  if (salt_offset < 0 || salt_len < 0 || salt_offset > (int64_t) salt_cap || salt_len > (int64_t) salt_cap - salt_offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -1901,7 +1911,7 @@ bare_crypto_timing_safe_equal(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[2], &a_len);
   assert(err == 0);
 
-  if (a_offset < 0 || a_len < 0 || a_offset + a_len > (int64_t) a_cap) {
+  if (a_offset < 0 || a_len < 0 || a_offset > (int64_t) a_cap || a_len > (int64_t) a_cap - a_offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
@@ -1921,7 +1931,7 @@ bare_crypto_timing_safe_equal(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int64(env, argv[5], &b_len);
   assert(err == 0);
 
-  if (b_offset < 0 || b_len < 0 || b_offset + b_len > (int64_t) b_cap) {
+  if (b_offset < 0 || b_len < 0 || b_offset > (int64_t) b_cap || b_len > (int64_t) b_cap - b_offset) {
     err = js_throw_range_error(env, NULL, "Buffer out of range");
     assert(err == 0);
 
