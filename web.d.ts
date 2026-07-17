@@ -17,7 +17,7 @@ interface JWK {
   x?: string
 }
 
-declare class SubtleCrypto {
+interface SubtleCrypto {
   generateKey(
     algorithm: { name: 'HMAC'; hash: HashArg; length?: number },
     extractable: boolean,
@@ -105,7 +105,7 @@ declare class SubtleCrypto {
 
 declare const subtle: SubtleCrypto
 
-declare class Crypto {
+interface Crypto {
   readonly subtle: SubtleCrypto
 
   getRandomValues<B extends ArrayBuffer | ArrayBufferView>(array: B): B

@@ -1,4 +1,4 @@
-declare class CryptoKey<A extends 'HMAC' | 'Ed25519' | 'PBKDF2' | string = string> {
+interface CryptoKey<A extends 'HMAC' | 'Ed25519' | 'PBKDF2' | string = string> {
   readonly type: 'public' | 'secret'
   readonly extractable: boolean
   readonly algorithm: A extends 'HMAC'
