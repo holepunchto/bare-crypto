@@ -1,3 +1,4 @@
 index.d.ts
 lib/key.d.ts
 lib/timing.d.ts
+lib/hash.d.ts

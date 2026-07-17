@@ -351,14 +351,11 @@ test('subtle, deriveBits pbkdf2', async (t) => {
     'deriveBits'
   ])
 
-  const algorithm = {
-    name: 'PBKDF2',
-    hash: 'SHA-512',
-    salt: Buffer.from('salt'),
-    iterations: 1000
-  }
-
-  const bits = await webcrypto.subtle.deriveBits(algorithm, key, 256)
+  const bits = await webcrypto.subtle.deriveBits(
+    { name: 'PBKDF2', hash: 'SHA-512', salt: Buffer.from('salt'), iterations: 1000 },
+    key,
+    256
+  )
 
   t.is(
     Buffer.from(bits).toString('hex'),
@@ -371,15 +368,8 @@ test('subtle, deriveKey pbkdf2', async (t) => {
     'deriveKey'
   ])
 
-  const algorithm = {
-    name: 'PBKDF2',
-    hash: 'SHA-512',
-    salt: Buffer.from('salt'),
-    iterations: 1000
-  }
-
   const derivedKey = await webcrypto.subtle.deriveKey(
-    algorithm,
+    { name: 'PBKDF2', hash: 'SHA-512', salt: Buffer.from('salt'), iterations: 1000 },
     key,
     { name: 'HMAC', hash: 'SHA-512' },
     true,
