@@ -77,8 +77,21 @@ interface SubtleCrypto {
   exportKey(format: 'raw' | 'spki' | 'pkcs8', key: CryptoKey): Promise<ArrayBuffer>
   exportKey(format: 'jwk', key: CryptoKey): Promise<JWK>
 
+  /**
+   * Sign `data` using `key`. For Ed25519, `algorithm` is ignored — pass `null`. `data` may be an `ArrayBuffer` or `ArrayBufferView`. Returns a `Buffer` containing the signature.
+   * @param algorithm - Ignored for Ed25519 — pass `null`.
+   * @param data - The data to sign.
+   * @param key - The key to sign with.
+   */
   sign(algorithm: 'HMAC' | 'Ed25519', key: CryptoKey, data: Buffer): Promise<ArrayBuffer>
 
+  /**
+   * Verify that `signature` is a valid signature over `data` for `key`. Returns `true` or `false`.
+   * @param algorithm - Ignored for Ed25519 — pass `null`.
+   * @param data - The signed data.
+   * @param key - The key to verify against.
+   * @param signature - The signature to check.
+   */
   verify(
     algorithm: 'HMAC' | 'Ed25519',
     key: CryptoKey,
@@ -108,8 +121,13 @@ declare const subtle: SubtleCrypto
 interface Crypto {
   readonly subtle: SubtleCrypto
 
+  /**
+   * Fill `array` with cryptographically secure random bytes and return the same `array`. Equivalent to `randomFillSync(array)`.
+   * @param array - The buffer to fill with cryptographically secure random bytes.
+   */
   getRandomValues<B extends ArrayBuffer | ArrayBufferView>(array: B): B
 
+  /** Generate a random RFC 4122 version-4 UUID string. */
   randomUUID(): string
 }
 
