@@ -1801,6 +1801,9 @@ bare_crypto_random_fill(js_env_t *env, js_callback_info_t *info) {
   }
 
   err = RAND_bytes(&data[offset], len);
+
+  // In BoringSSL `RAND_bytes()` either succeeds or aborts the process and so
+  // will only ever return 1.
   assert(err == 1);
 
   return NULL;
