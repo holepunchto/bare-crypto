@@ -22,7 +22,7 @@ console.log(digest)
 
 ## API
 
-See the [full API reference](https://docs.pears.com/reference/bare/modules/bare-crypto).
+See the [`bare-crypto` reference](https://docs.pears.com/reference/bare/modules/bare-crypto).
 
 ## License
 
