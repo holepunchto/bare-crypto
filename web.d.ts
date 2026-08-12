@@ -78,7 +78,8 @@ interface SubtleCrypto {
   exportKey(format: 'jwk', key: CryptoKey): Promise<JWK>
 
   /**
-   * Sign `data` using `key`. For Ed25519, `algorithm` is ignored — pass `null`. `data` may be an `ArrayBuffer` or `ArrayBufferView`. Returns a `Buffer` containing the signature.
+   * Sign `data` using `key`. For Ed25519, `algorithm` is ignored — pass `null`. `data` may be an
+   * `ArrayBuffer` or `ArrayBufferView`. Returns a `Buffer` containing the signature.
    * @param algorithm - Ignored for Ed25519 — pass `null`.
    * @param data - The data to sign.
    * @param key - The key to sign with.
@@ -122,7 +123,8 @@ interface Crypto {
   readonly subtle: SubtleCrypto
 
   /**
-   * Fill `array` with cryptographically secure random bytes and return the same `array`. Equivalent to `randomFillSync(array)`.
+   * Fill `array` with cryptographically secure random bytes and return the same `array`. Equivalent
+   * to `randomFillSync(array)`.
    * @param array - The buffer to fill with cryptographically secure random bytes.
    */
   getRandomValues<B extends ArrayBuffer | ArrayBufferView>(array: B): B

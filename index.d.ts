@@ -12,17 +12,25 @@ import { timingSafeEqual } from './lib/timing'
 import web from './web'
 
 /**
- * Create a new `Hash` instance with the specified `algorithm`. `algorithm` may be a string (for example `'sha256'`, `'sha-256'`) or a numeric constant from `constants.hash`. The `options` are forwarded to the `Transform` constructor from `bare-stream` (<https://github.com/holepunchto/bare-stream>).
- * @param algorithm - The hash algorithm, as a string (for example `'sha256'`, `'sha-256'`) or a numeric constant from `constants.hash`.
+ * Create a new `Hash` instance with the specified `algorithm`. `algorithm` may be a string (for
+ * example `'sha256'`, `'sha-256'`) or a numeric constant from `constants.hash`. The `options` are
+ * forwarded to the `Transform` constructor from `bare-stream`
+ * (<https://github.com/holepunchto/bare-stream>).
+ * @param algorithm - The hash algorithm, as a string (for example `'sha256'`, `'sha-256'`) or a
+ * numeric constant from `constants.hash`.
  * @param opts - Options forwarded to the `Transform` constructor from `bare-stream`.
  * @throws {UNKNOWN_HASH} `algorithm` is a string that does not name a supported hash algorithm.
  */
 declare function createHash(algorithm: HashAlgorithm | number, opts?: TransformOptions<Hash>): Hash
 
 /**
- * Create a new `Hmac` instance using `algorithm` and `key`. `key` may be a string or `ArrayBufferView`. If `key` is a string, an `encoding` option (defaults to `'utf8'`) controls how it is decoded. The `options` are also forwarded to `Transform`.
- * @param algorithm - The hash algorithm, as a string (for example `'sha256'`, `'sha-256'`) or a numeric constant from `constants.hash`.
- * @param key - The HMAC key; a string is decoded using the `encoding` option (defaults to `'utf8'`).
+ * Create a new `Hmac` instance using `algorithm` and `key`. `key` may be a string or
+ * `ArrayBufferView`. If `key` is a string, an `encoding` option (defaults to `'utf8'`) controls how
+ * it is decoded. The `options` are also forwarded to `Transform`.
+ * @param algorithm - The hash algorithm, as a string (for example `'sha256'`, `'sha-256'`) or a
+ * numeric constant from `constants.hash`.
+ * @param key - The HMAC key; a string is decoded using the `encoding` option (defaults to
+ * `'utf8'`).
  * @param opts - Options forwarded to the `Transform` constructor from `bare-stream`.
  * @throws {UNKNOWN_HASH} `algorithm` is a string that does not name a supported hash algorithm.
  */
@@ -33,13 +41,19 @@ declare function createHmac(
 ): Hmac
 
 /**
- * Create a new `Cipheriv` instance using `algorithm`, `key`, and `iv` (initialization vector / nonce). `key` and `iv` must match the algorithm's required lengths. For AEAD algorithms (for example `AES128GCM`, `CHACHA20POLY1305`), the `options` may include an `authTagLength` (defaults to `16`).
- * @param algorithm - The cipher algorithm, as a string or a numeric constant from `constants.cipher`.
+ * Create a new `Cipheriv` instance using `algorithm`, `key`, and `iv` (initialization vector /
+ * nonce). `key` and `iv` must match the algorithm's required lengths. For AEAD algorithms (for
+ * example `AES128GCM`, `CHACHA20POLY1305`), the `options` may include an `authTagLength` (defaults
+ * to `16`).
+ * @param algorithm - The cipher algorithm, as a string or a numeric constant from
+ * `constants.cipher`.
  * @param key - The encryption key; must match the algorithm's required length.
  * @param iv - The initialization vector / nonce; must match the algorithm's required length.
- * @param opts - Options forwarded to `Transform`; may include `encoding` (defaults to `'utf8'`) and, for AEAD algorithms, `authTagLength` (defaults to `16`; must be `12`, `14`, or `16`).
+ * @param opts - Options forwarded to `Transform`; may include `encoding` (defaults to `'utf8'`)
+ * and, for AEAD algorithms, `authTagLength` (defaults to `16`; must be `12`, `14`, or `16`).
  * @throws {UNKNOWN_CIPHER} `algorithm` is a string that does not name a supported cipher.
- * @throws {RangeError} `key` or `iv` does not match the algorithm's required length, or (AEAD) `authTagLength` is not `12`, `14`, or `16`.
+ * @throws {RangeError} `key` or `iv` does not match the algorithm's required length, or (AEAD)
+ * `authTagLength` is not `12`, `14`, or `16`.
  */
 declare function createCipheriv(
   algorithm: CipherAlgorithm | number,
@@ -49,13 +63,16 @@ declare function createCipheriv(
 ): Cipheriv
 
 /**
- * Create a new `Decipheriv` instance using `algorithm`, `key`, and `iv`. Accepts the same `options` as `createCipheriv`.
- * @param algorithm - The cipher algorithm, as a string or a numeric constant from `constants.cipher`.
+ * Create a new `Decipheriv` instance using `algorithm`, `key`, and `iv`. Accepts the same `options`
+ * as `createCipheriv`.
+ * @param algorithm - The cipher algorithm, as a string or a numeric constant from
+ * `constants.cipher`.
  * @param key - The decryption key; must match the algorithm's required length.
  * @param iv - The initialization vector / nonce; must match the algorithm's required length.
  * @param opts - Accepts the same options as `createCipheriv`.
  * @throws {UNKNOWN_CIPHER} `algorithm` is a string that does not name a supported cipher.
- * @throws {RangeError} `key` or `iv` does not match the algorithm's required length, or (AEAD) `authTagLength` is not `12`, `14`, or `16`.
+ * @throws {RangeError} `key` or `iv` does not match the algorithm's required length, or (AEAD)
+ * `authTagLength` is not `12`, `14`, or `16`.
  */
 declare function createDecipheriv(
   algorithm: CipherAlgorithm | number,

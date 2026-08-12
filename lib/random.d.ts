@@ -12,7 +12,9 @@ export function randomBytes(
 ): void
 
 /**
- * Fill `buffer` with cryptographically secure random bytes, optionally restricted to `[offset, offset + size)`. `offset` defaults to `0` and `size` to `buffer.byteLength - offset`. Returns the same `buffer`.
+ * Fill `buffer` with cryptographically secure random bytes, optionally restricted to `[offset,
+ * offset + size)`. `offset` defaults to `0` and `size` to `buffer.byteLength - offset`. Returns the
+ * same `buffer`.
  * @param buffer - The buffer to fill.
  * @param offset - Offset at which filling starts (defaults to `0`).
  * @param size - Amount to fill (defaults to `buffer.byteLength - offset`).

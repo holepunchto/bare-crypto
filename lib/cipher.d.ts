@@ -17,12 +17,15 @@ export type CipherAlgorithm =
 
 export class Cipheriv extends Transform {
   /**
-   * @param algorithm - The cipher algorithm, as a string or a numeric constant from `constants.cipher`.
+   * @param algorithm - The cipher algorithm, as a string or a numeric constant from
+   * `constants.cipher`.
    * @param key - The encryption key; must match the algorithm's required length.
    * @param iv - The initialization vector / nonce; must match the algorithm's required length.
-   * @param opts - Options forwarded to `Transform`; may include `encoding` (defaults to `'utf8'`) and, for AEAD algorithms, `authTagLength` (defaults to `16`; must be `12`, `14`, or `16`).
+   * @param opts - Options forwarded to `Transform`; may include `encoding` (defaults to `'utf8'`)
+   * and, for AEAD algorithms, `authTagLength` (defaults to `16`; must be `12`, `14`, or `16`).
    * @throws {UNKNOWN_CIPHER} `algorithm` is a string that does not name a supported cipher.
-   * @throws {RangeError} `key` or `iv` does not match the algorithm's required length, or (AEAD) `authTagLength` is not `12`, `14`, or `16`.
+   * @throws {RangeError} `key` or `iv` does not match the algorithm's required length, or (AEAD)
+   * `authTagLength` is not `12`, `14`, or `16`.
    */
   constructor(
     algorithm: CipherAlgorithm | number,
@@ -32,10 +35,12 @@ export class Cipheriv extends Transform {
   )
 
   /**
-   * Encrypt a chunk. Returns a `Buffer`, or a string if `outputEncoding` is provided. For AEAD ciphers, encrypted output is delivered all at once from `final()`.
+   * Encrypt a chunk. Returns a `Buffer`, or a string if `outputEncoding` is provided. For AEAD
+   * ciphers, encrypted output is delivered all at once from `final()`.
    * @param data - The chunk to encrypt.
    * @param inputEncoding - The encoding of `data` when it is a string.
-   * @param outputEncoding - If provided, the encrypted result is returned as a string in this encoding.
+   * @param outputEncoding - If provided, the encrypted result is returned as a string in this
+   * encoding.
    */
   update(
     data: string | Buffer,
@@ -44,7 +49,8 @@ export class Cipheriv extends Transform {
   ): string | Buffer
 
   /**
-   * Finalize encryption. For AEAD ciphers, the auth tag becomes available via `getAuthTag()` after this call.
+   * Finalize encryption. For AEAD ciphers, the auth tag becomes available via `getAuthTag()` after
+   * this call.
    * @param outputEncoding - If provided, the final output is returned as a string in this encoding.
    */
   final(outputEncoding?: BufferEncoding): string | Buffer
@@ -56,7 +62,8 @@ export class Cipheriv extends Transform {
   setAutoPadding(pad: unknown): this
 
   /**
-   * Provide additional authenticated data. AEAD ciphers only. The `options` may include an `encoding` for string inputs.
+   * Provide additional authenticated data. AEAD ciphers only. The `options` may include an
+   * `encoding` for string inputs.
    * @param buffer - The additional authenticated data.
    * @param opts - May include an `encoding` for string `buffer` inputs.
    */
@@ -68,12 +75,14 @@ export class Cipheriv extends Transform {
 
 export class Decipheriv extends Transform {
   /**
-   * @param algorithm - The cipher algorithm, as a string or a numeric constant from `constants.cipher`.
+   * @param algorithm - The cipher algorithm, as a string or a numeric constant from
+   * `constants.cipher`.
    * @param key - The decryption key; must match the algorithm's required length.
    * @param iv - The initialization vector / nonce; must match the algorithm's required length.
    * @param opts - Accepts the same options as `createCipheriv`.
    * @throws {UNKNOWN_CIPHER} `algorithm` is a string that does not name a supported cipher.
-   * @throws {RangeError} `key` or `iv` does not match the algorithm's required length, or (AEAD) `authTagLength` is not `12`, `14`, or `16`.
+   * @throws {RangeError} `key` or `iv` does not match the algorithm's required length, or (AEAD)
+   * `authTagLength` is not `12`, `14`, or `16`.
    */
   constructor(
     algorithm: CipherAlgorithm | number,
@@ -86,7 +95,8 @@ export class Decipheriv extends Transform {
    * Decrypt a chunk. Same semantics as `cipher.update()`.
    * @param data - The chunk to decrypt.
    * @param inputEncoding - The encoding of `data` when it is a string.
-   * @param outputEncoding - If provided, the decrypted result is returned as a string in this encoding.
+   * @param outputEncoding - If provided, the decrypted result is returned as a string in this
+   * encoding.
    */
   update(
     data: string | Buffer,

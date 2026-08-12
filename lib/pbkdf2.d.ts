@@ -2,7 +2,9 @@ import Buffer from 'bare-buffer'
 import { type HashAlgorithm } from './hash'
 
 /**
- * Derive a key from `password` and `salt` using the specified `digest` algorithm and number of `iterations`. Returns a `keylen`-byte `Buffer`. `password` and `salt` may be strings or `ArrayBufferView`s.
+ * Derive a key from `password` and `salt` using the specified `digest` algorithm and number of
+ * `iterations`. Returns a `keylen`-byte `Buffer`. `password` and `salt` may be strings or
+ * `ArrayBufferView`s.
  * @param password - The password to derive the key from.
  * @param salt - The salt.
  * @param iterations - The number of PBKDF2 iterations; must be between `1` and `2^32 - 1`.

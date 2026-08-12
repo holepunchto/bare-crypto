@@ -4,7 +4,8 @@ import { Key as CryptoKey } from './key'
 export type SignatureAlgorithm = 'ed25519'
 
 /**
- * Sign `data` using `key`. For Ed25519, `algorithm` is ignored — pass `null`. `data` may be an `ArrayBuffer` or `ArrayBufferView`. Returns a `Buffer` containing the signature.
+ * Sign `data` using `key`. For Ed25519, `algorithm` is ignored — pass `null`. `data` may be an
+ * `ArrayBuffer` or `ArrayBufferView`. Returns a `Buffer` containing the signature.
  * @param algorithm - Ignored for Ed25519 — pass `null`.
  * @param data - The data to sign.
  * @param key - The key to sign with.
