@@ -78,20 +78,27 @@ interface SubtleCrypto {
   exportKey(format: 'jwk', key: CryptoKey): Promise<JWK>
 
   /**
-   * Sign `data` using `key`. For Ed25519, `algorithm` is ignored — pass `null`. `data` may be an
-   * `ArrayBuffer` or `ArrayBufferView`. Returns a `Buffer` containing the signature.
-   * @param algorithm - Ignored for Ed25519 — pass `null`.
+   * Sign `data` using `key`. `algorithm` selects the signing algorithm and must match the algorithm
+   * of `key`. Resolves with an `ArrayBuffer` containing the signature.
+   * @param algorithm - The signing algorithm to use; must match the algorithm of `key`.
+   * @param key - The key to sign with; must include `'sign'` in its usages, and must be a private
+   * key for Ed25519.
    * @param data - The data to sign.
-   * @param key - The key to sign with.
+   * @throws {INVALID_ACCESS} `algorithm` does not match the algorithm of `key`, `key` cannot be
+   * used for signing, or `key` is not a private key for Ed25519.
    */
   sign(algorithm: 'HMAC' | 'Ed25519', key: CryptoKey, data: Buffer): Promise<ArrayBuffer>
 
   /**
-   * Verify that `signature` is a valid signature over `data` for `key`. Returns `true` or `false`.
-   * @param algorithm - Ignored for Ed25519 — pass `null`.
-   * @param data - The signed data.
-   * @param key - The key to verify against.
+   * Verify that `signature` is a valid signature over `data` for `key`. `algorithm` selects the
+   * signature algorithm and must match the algorithm of `key`. Resolves with `true` or `false`.
+   * @param algorithm - The signature algorithm to use; must match the algorithm of `key`.
+   * @param key - The key to verify against; must include `'verify'` in its usages, and must be a
+   * public key for Ed25519.
    * @param signature - The signature to check.
+   * @param data - The signed data.
+   * @throws {INVALID_ACCESS} `algorithm` does not match the algorithm of `key`, `key` cannot be
+   * used for verification, or `key` is not a public key for Ed25519.
    */
   verify(
     algorithm: 'HMAC' | 'Ed25519',
