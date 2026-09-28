@@ -38,29 +38,38 @@ exports.SubtleCrypto = class SubtleCrypto {
   async importKey(format, keyData, algorithm, extractable, usages) {
     if (typeof algorithm === 'string') algorithm = { name: algorithm }
 
+    let owned = false
+
     switch (format) {
       case 'raw':
       case 'pkcs8':
-      case 'spki':
-        if (ArrayBuffer.isView(keyData)) {
-          keyData = Buffer.from(keyData)
-        } else {
-          keyData = Buffer.from(keyData.slice())
-        }
+      case 'spki': {
+        const bytes = ArrayBuffer.isView(keyData)
+          ? new Uint8Array(keyData.buffer, keyData.byteOffset, keyData.byteLength)
+          : new Uint8Array(keyData)
+
+        keyData = Buffer.allocUnsafeSlow(bytes.byteLength)
+        keyData.set(bytes)
+        owned = true
         break
+      }
     }
 
-    switch (algorithm.name.toLowerCase()) {
-      case 'hmac':
-        return hmac.importKey(format, keyData, algorithm, extractable, usages)
-      case 'ed25519':
-        return ed25519.importKey(format, keyData, algorithm, extractable, usages)
-      case 'pbkdf2':
-        return pbkdf2.importKey(format, keyData, algorithm, extractable, usages)
-      default:
-        throw errors.NOT_SUPPORTED(
-          `Algorithm '${algorithm.name}' does not support the importKey() operation`
-        )
+    try {
+      switch (algorithm.name.toLowerCase()) {
+        case 'hmac':
+          return hmac.importKey(format, keyData, algorithm, extractable, usages)
+        case 'ed25519':
+          return ed25519.importKey(format, keyData, algorithm, extractable, usages)
+        case 'pbkdf2':
+          return pbkdf2.importKey(format, keyData, algorithm, extractable, usages)
+        default:
+          throw errors.NOT_SUPPORTED(
+            `Algorithm '${algorithm.name}' does not support the importKey() operation`
+          )
+      }
+    } finally {
+      if (owned) keyData.fill(0)
     }
   }
 
