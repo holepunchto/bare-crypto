@@ -21,7 +21,7 @@ set(BUILD_TESTING OFF)
 
 fetch_package("github:google/boringssl#0.20260211.0")
 
-add_bare_module(bare_crypto)
+add_bare_module(bare_crypto INSTALL PRIVACY_MANIFEST PrivacyInfo.xcprivacy)
 
 target_sources(
   ${bare_crypto}
