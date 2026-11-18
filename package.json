@@ -29,6 +29,7 @@
     "binding.c",
     "binding.js",
     "CMakeLists.txt",
+    "PrivacyInfo.xcprivacy",
     "lib",
     "prebuilds"
   ],
