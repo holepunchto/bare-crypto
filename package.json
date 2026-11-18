@@ -56,7 +56,7 @@
   "devDependencies": {
     "bare-buffer": "^3.0.1",
     "brittle": "^3.5.0",
-    "cmake-bare": "^1.15.0",
+    "cmake-bare": "^1.18.0",
     "cmake-fetch": "^1.0.0",
     "lunte": "^1.7.0",
     "prettier": "^3.4.2",
